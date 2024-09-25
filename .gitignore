@@ -28,8 +28,7 @@ yarn-error.log*
 
 # self
 data/
-.dockerignore
-__pycache__
+**/__pycache__
 leemeJavier.txt
 staticfiles/
 .github/
