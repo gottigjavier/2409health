@@ -16,6 +16,7 @@
 
 # misc
 #.env
+/hltenv
 .DS_Store
 .env.local
 .env.development.local

@@ -4,10 +4,10 @@
 
 Esta aplicación recibe y administra las llamadas y tareas programadas que se dan en el sector de internación de un hospital o clínica.
 
-Utilizar el navegador como interfaz con el usuario hace posible su manejo descentralizado. 
+Utilizar el navegador como interfaz con el usuario hace posible su manejo descentralizado.
 Esto implica que cualquier miembro del personal de salud (médico, enfermero, administrativo) con las credenciales correpondientes puede acceder a la información y a las funciones de la aplicación (ej: ocupar cama, programar tareas, etc) desde cualquier punto de la red.
 
-Si bien, por el tipo de aplicación, la tendencia es a su uso en PC, es totalmente compatible con móviles o tablets. 
+Si bien, por el tipo de aplicación, la tendencia es a su uso en PC, es totalmente compatible con móviles o tablets.
 
 También hay que destacar que el sistema de llamadas provenientes de los botones pulsadores de cada cama y del botón de cancelación de llamadas de cada habitación puede ser configurado de tres formas:
 
@@ -30,29 +30,48 @@ En la carpeta /health/mosquitto/ se encuentra el archivo de configuración del b
 
 Algunos archivos por ahora innecesarios o redundantes han sido preservados pensando en futuras modificaciones.
 
-### Algunos detalles previos 
+### Algunos detalles previos
 
-La aplicación maneja un estado global a través del "contexto". 
+La aplicación maneja un estado global a través del "contexto".
 
-El estado de la app y tareas son actualizadas via websockets (Django channels). Las llamadas provenientes de las placas arduino usan el protocolo MQTT. 
+El estado de la app y tareas son actualizadas via websockets (Django channels). Las llamadas provenientes de las placas arduino usan el protocolo MQTT.
 
-No se utilizan actualizaciones optimistas de la interfaz de usuario. Esto es así porque los estados de la interfaz dependen en muchos casos de las actualizaciones que vienen del backend a través de websockets (channels). 
+No se utilizan actualizaciones optimistas de la interfaz de usuario. Esto es así porque los estados de la interfaz dependen en muchos casos de las actualizaciones que vienen del backend a través de websockets (channels).
 
 Generalmente, en las áreas de hospitalización, cada cama tiene un botón de llamada y cada habitación tiene un botón para cancelar las llamadas de todas las camas en esa habitación.
 
-Se espera que, a través de sistemas como Arduino y Raspberry, la señal producida por los pulsadores se transforme en datos del siguiente formato JSON: 
+Se espera que, a través de sistemas como Arduino y Raspberry, la señal producida por los pulsadores se transforme en datos del siguiente formato JSON:
  {'state': state, 'id': 'call-id', 'key': 'clave-anti-hacking'}, que es el tipo de datos que espera la aplicación. El tipo de datos 'state' es booleano. El tipo de datos 'id' y 'key' son una cadena. En caso de llamada, 'id' tiene el formato 'número de habitación, número de cama' (por ejemplo: {'state': true,' id ': '12, 3', 'key': 'clave-anti-hacking'}) y en caso de cancelación, el número de llamada es de la forma 'número de habitación,0' (por ejemplo: {'state': false, 'id': '12,0', 'key': 'clave-anti-hacking'}).
 
- 
+
 El módulo NodeMCU 1.0 - ESP8266 cuenta con sólo 3 pines para ingreso de señal. Por el momento se designa un pin para cada cama lo que restringe el número de camas al de pines.
 Se puede extender a 6 camas más botón de anulación de llamada, es decir 7 => (2³ = 8) si utilizamos cada pin como bit de un sistema binario. No son 8 sino 7 las combinaciones ya que 000 se corresponde a ninguna llamada o llamadas en reposo.
 Cada cable de señal que proviene del botón puede disgregarse en bits = 1 y entonces, de acuerdo a la combinación, enviar el json al sistema.
 
- 27/01/23 La función "recording()" graba los estados de las habitaciones, llamadas y tareas antes y después de cualquier cambio en una cadena de texto. En esta cadena de texto, los campos están separados por comas, lo que podría llegar a producir una incongruencia al encontrarse con el dato 'id': '12,3'. Esto podría solucionarse cambiando el formato de dato de '12,3' a '12.3'. Otra oción, que parecería ser la óptima, es mantener ese formato de datos, y a la hora de tratarlos, tomar por dato separado (por comas) a la habitación y la cama. El único inconveniente que se presentaba en versiones previas era con el formato del la cancelación de llamada, que constaba de un dato sin coma (Ej: 'id': '12'). Esto podía generar una falta de correspondencia entre los datos y el campo al que pertenecía porque faltaría un registro correspondiente a ese campo y el resto de los registros se trasladaría un lugar ocupando un campo incorrecto. Para solucionar esto se cambió el formato de cancelación de llamada de '12' a 12,0', lo cual no solo es menos trabajo sino que se adapta mejor a las funciones de formateo y filtración del análisis de datos. 
+ 27/01/23 La función "recording()" graba los estados de las habitaciones, llamadas y tareas antes y después de cualquier cambio en una cadena de texto. En esta cadena de texto, los campos están separados por comas, lo que podría llegar a producir una incongruencia al encontrarse con el dato 'id': '12,3'. Esto podría solucionarse cambiando el formato de dato de '12,3' a '12.3'. Otra oción, que parecería ser la óptima, es mantener ese formato de datos, y a la hora de tratarlos, tomar por dato separado (por comas) a la habitación y la cama. El único inconveniente que se presentaba en versiones previas era con el formato del la cancelación de llamada, que constaba de un dato sin coma (Ej: 'id': '12'). Esto podía generar una falta de correspondencia entre los datos y el campo al que pertenecía porque faltaría un registro correspondiente a ese campo y el resto de los registros se trasladaría un lugar ocupando un campo incorrecto. Para solucionar esto se cambió el formato de cancelación de llamada de '12' a 12,0', lo cual no solo es menos trabajo sino que se adapta mejor a las funciones de formateo y filtración del análisis de datos.
 
-En las primeras versiones se podía obviar el dato 'state' ya que la app entendía que si llegaba una 'id' sin coma, el dato provenía de la cancelación de llamada. Esto quedó deprecado. 
+En las primeras versiones se podía obviar el dato 'state' ya que la app entendía que si llegaba una 'id' sin coma, el dato provenía de la cancelación de llamada. Esto quedó deprecado.
 
 Para las pruebas sin las placas arduino los botones pulsadores se simulan a través de "localhost:8000/nursing/rooms".
+
+Es posible que quiera crear un entorno virtual para no generar incompatibilidades de paquetes python.
+Esto no interferirá con la compilación npm vinculada a React.
+Para crear el entorno virtual:
+* NEV = nombre del entorno virtual
+
+```
+~$ python -m venv [NEV]
+```
+
+Para activarlo:
+```
+~$ source [NEV]/bin/activate
+```
+
+Para desactivarlo:
+```
+~$ deactivate
+```
 
 ### Atención!!
 
@@ -70,7 +89,7 @@ Corriendo la app sobre Docker, el archivo docker-compose ya tiene la instrucció
 El archivo "defines.h" contiene los valores de las constantes que se grabarán en el módulo NodeMCU 1.0 - ESP8266
 así que allí habrá que definir el SSID de la red, su password y la IP a la que debe enviar los datos. En desarrollo, esta IP local es la de nuestra máquina.
 
-En algunos sistemas Linux como Arch, el sistema denegará el acceso al path donde se monta el módulo. Este path normalmente es "/dev/ttyUSB0". Recordar que ttyUSB0 recién aparece cuando se conecta el módulo NodeMCU. 
+En algunos sistemas Linux como Arch, el sistema denegará el acceso al path donde se monta el módulo. Este path normalmente es "/dev/ttyUSB0". Recordar que ttyUSB0 recién aparece cuando se conecta el módulo NodeMCU.
 Este error puede verse en la consola de mensajes del IDE Arduino.
 
 Para verificar permisos:
@@ -99,15 +118,15 @@ Las variables de entorno utilizadas por el archivo "settings.py" se importan a t
 
 Advertencia: si no está configurando su entorno por separado, cree uno.
 
-Si no va a utilizar un archivo .env de todos modos, la aplicación utilizará los valores predeterminados definidos en "settings.py". También puede configurar los ajustes manualmente. 
+Si no va a utilizar un archivo .env de todos modos, la aplicación utilizará los valores predeterminados definidos en "settings.py". También puede configurar los ajustes manualmente.
 
 Para más información vea: https://pypi.org/project/django-environ/
 
-Para index.html con React Components... 
+Para index.html con React Components...
 
 ```
 TEMPLATES= [{ ...
-    'DIRS':[ 
+    'DIRS':[
         os.path.join(BASE_DIR, 'nursing-react/build')
     ], ...
 }]
@@ -116,16 +135,16 @@ TEMPLATES= [{ ...
 Configure TIME_ZONE para su hora local para mantener sincronizados la hora de la plantilla, la hora del controlador y la hora de la base de datos.
 
 ```
-Set USE_TZ = False 
+Set USE_TZ = False
 ```
 
-Por ejemplo: en Argentina (UTC-3) establezca 
+Por ejemplo: en Argentina (UTC-3) establezca
 
 ```
-TIME_ZONE = 'Etc/GMT+3' 
+TIME_ZONE = 'Etc/GMT+3'
 ```
 
-Agregue 
+Agregue
 
 ```
 ASGI_APPLICATION = 'healthproject.routing.application'
@@ -135,15 +154,15 @@ ASGI_APPLICATION = 'healthproject.routing.application'
 ### Desarrollo local:
 
 ```
-DATABASES = {... 
-    'NAME': ['database_name'], ... 
-    'HOST': 'localhost', ... 
+DATABASES = {...
+    'NAME': ['database_name'], ...
+    'HOST': 'localhost', ...
 }
 ```
 
 ```
 CHANNEL_LAYERS= {
-    ... "hosts": [('localhost', 6379)],   
+    ... "hosts": [('localhost', 6379)],
 }
 ```
 
@@ -158,23 +177,23 @@ $ systemctl status docker
 Importante!: Si de todas maneras usará archivos .env para settings.py y para docker-compose.yml, asegúrese de que NAME y HOST sean:
 
 ```
-DATABASES = {... 
-    'NAME': 'db', ... 
+DATABASES = {...
+    'NAME': 'db', ...
     'HOST': 'db', ...
     }
 ```
 ```
 CHANNEL_LAYERS= {
-    ... "hosts": [('redis', 6379)],   
+    ... "hosts": [('redis', 6379)],
 }
 ```
 ### Docker-compose. Instalando la App
 
-Este proyecto fue desarrollado en Ubuntu. Si tiene otro sistema operativo, tal vez necesite cambiar la forma en que accede a las carpetas o cambiar algunos permisos. 
+Este proyecto fue desarrollado en Ubuntu. Si tiene otro sistema operativo, tal vez necesite cambiar la forma en que accede a las carpetas o cambiar algunos permisos.
 
 En la misma carpeta que contiene el archivo docker-compose.yml, cree un archivo .env que contenga las variables de entorno que usarán los contenedores.
 Advertencia: si no está configurando su entorno por separado, cree uno.
-Si no va a utilizar un archivo .env de todos modos, la aplicación utilizará los valores predeterminados definidos en el archivo .yml. También puede configurar los ajustes manualmente. 
+Si no va a utilizar un archivo .env de todos modos, la aplicación utilizará los valores predeterminados definidos en el archivo .yml. También puede configurar los ajustes manualmente.
 
 Para más información vea: https://docs.docker.com/compose/environment-variables/
 
@@ -186,7 +205,7 @@ Al correr el contenedor de la App, también creará automáticamente un super us
 
 A través del repositorio GitHub:
 
-Si ha clonado la versión de desarrollo del proyecto desde GitHub, incluye carpetas de desarrollo como "src", "node_modules", etc., pero la imagen creada para docker-compose no incluirá carpetas de desarrollo ni archivos .env. Ver: .dockerignore 
+Si ha clonado la versión de desarrollo del proyecto desde GitHub, incluye carpetas de desarrollo como "src", "node_modules", etc., pero la imagen creada para docker-compose no incluirá carpetas de desarrollo ni archivos .env. Ver: .dockerignore
 
 "appdirectory" será la carpeta que contiene el archivo docker-compose.
 
@@ -194,13 +213,13 @@ Si ha clonado la versión de desarrollo del proyecto desde GitHub, incluye carpe
 mypc@mypc:~appdirectory$ docker-compose up --build -d (optional --> -d: detached mode)
 ```
 
-Para parar los contenedores, borrarlos y dar de baja la red interna entre ellos: 
+Para parar los contenedores, borrarlos y dar de baja la red interna entre ellos:
 
 ```
 mypc@mypc:~appdirectory$ docker-compose down
 ```
 
-Para omitir el error db auth.User al migrar, docker-compose.yml ejecuta los comandos: 
+Para omitir el error db auth.User al migrar, docker-compose.yml ejecuta los comandos:
 
 ```
 mypc@mypc:~appdirectory$ python3 manage.py migrate auth  (r1)
@@ -320,11 +339,11 @@ Al ejecutarse en Docker, funcionó al poner, por ejemplo, "client.connect ("192.
 observar en el mensaje de error en qué puerto está realmente escuchando mosquitto.
 En este caso 10.10.8.1 (voilà).
 
-Entonces, para ejecutar a través de docker, queda: 
+Entonces, para ejecutar a través de docker, queda:
 
 ```
 client.connect ('10.10.8.1', 1883)
-``` 
+```
 
 #### Solo usuarios autorizados pueden acceder a la aplicación. Se debe crear el primer ususario como superusuario de Django:
 
@@ -346,7 +365,7 @@ Creando un superusuario:
 root@containerID:/healt# python3 manage.py createsuperuser
 ```
 
-Si por alguna razón los comandos (r1) y (r2) no ejecutaron las migraciones en su sistema o arrojaron un error, ejecútelas manualmente dentro del contenedor antes de crear el superusuario. 
+Si por alguna razón los comandos (r1) y (r2) no ejecutaron las migraciones en su sistema o arrojaron un error, ejecútelas manualmente dentro del contenedor antes de crear el superusuario.
 
 ### Listos para trabajar:
 
@@ -362,15 +381,15 @@ Las carpetas data/db se crean con permisos restringidos. Si necesita reconstruir
 sudo chmod 777 -R health/
 ```
 
-Recuerde que la opción 777 -R da permiso total para esa carpeta en forma recursiva a cualquier usuario.  
+Recuerde que la opción 777 -R da permiso total para esa carpeta en forma recursiva a cualquier usuario.
 
-Cuando se crea el nuevo contenedor de la aplicación, los permisos se volverán a restringir. 
+Cuando se crea el nuevo contenedor de la aplicación, los permisos se volverán a restringir.
 
 Para detener el servidor si no lanzó en detached mode:
 
 >CTRL+C
 
-Detenga los servicios y la red y elimine los contenedores con: 
+Detenga los servicios y la red y elimine los contenedores con:
 
 ```
 mypc@mypc:~appdirectory$ docker-compose down (2)
@@ -398,11 +417,11 @@ Iniciada la sesión, será llevado a la página de inicio: http://localhost:8000
 
 Allí, usted puede ingresar a la app, registrar un nuevo ususario (solo administradores), ir a la página de administración de Django (solo superusuarios) o cerrar sesión.
 
-Para mantener la ventana de la aplicación lo más limpia posible no se han incluído botones para navegar a la hompage. Si usted necesita, por ejemplo, cerrar sesión dirigiéndose a la página de inicio, puede escribir http://localhost:8000/nursing/home en la barra de direcciones o agregarla a la barra de favoritos del navegador. 
+Para mantener la ventana de la aplicación lo más limpia posible no se han incluído botones para navegar a la hompage. Si usted necesita, por ejemplo, cerrar sesión dirigiéndose a la página de inicio, puede escribir http://localhost:8000/nursing/home en la barra de direcciones o agregarla a la barra de favoritos del navegador.
 
 ### Manejo de aplicación
 
-Para acceder a la aplicación es necesario iniciar sesión. En el caso de que un dispositivo sea utilizado por varias personas, solo una de ellas debe iniciar sesión; normalmente será la que esté a cargo del equipo de trabajo o líder, quien a su vez será responsable de las acciones declaradas durante esa sesión. 
+Para acceder a la aplicación es necesario iniciar sesión. En el caso de que un dispositivo sea utilizado por varias personas, solo una de ellas debe iniciar sesión; normalmente será la que esté a cargo del equipo de trabajo o líder, quien a su vez será responsable de las acciones declaradas durante esa sesión.
 
 
 Cuando se declara una acción (ocupar cama, programar tarea, etc.) se brinda la opción de declarar quién la realiza (o la realizó). Toda declaración se guarda en la base de datos identificando siempre dos roles: quien inició sesión y quien se declara como realizador de la acción (anónimo por defecto). Se implementó de esta manera para agilizar y flexibilizar el manejo de la aplicación. Entonces, dependiendo de la confianza en los miembros del equipo para manipular la aplicación y teniendo en cuenta que el responsable de lo que se ingrese en ese dispositivo es quien inició sesión, se puede optar por que cualquier miembro de dicho equipo pueda ingresar reportes identificándose a si mismo o a un tercero como realizador de una acción sin tener que ingresar constantemente contraseñas.
@@ -415,7 +434,7 @@ La aplicación fue concebida para que se pueda identificar fácil e inmediatamen
 
 gris : desocupada
 
-verde : ocupada, sin llamadas no contestadas ni tareas pendientes cuyo momento programado se haya cumplido. 
+verde : ocupada, sin llamadas no contestadas ni tareas pendientes cuyo momento programado se haya cumplido.
 
 azul : tarea pendiente cuyo momento programado se ha cumplido.
 
@@ -436,13 +455,13 @@ Las tareas generalmente pueden realizarse minutos antes o despúes del momento p
 
 - "10 minutos previos al momento programado para la tarea": cambio de color en la tarea.
 - "momento programado para la tarea": alerta sonora, cambio de color en la tarea y la cama.
-- "momento en que efectivamente se realiza la tarea"  
+- "momento en que efectivamente se realiza la tarea"
 
 "Nueva tarea": de manera predeterminada, el "momento programado para la tarea" figurará como para dentro de 30 minutos. Se puede cambiar esto en el cuadro de tiempo de programación.
 
 Para una tarea que se repite periódicamente se debe tildar el checkbox "repetir" y elegir la frecuencia con que se repetirá. Por defecto las tareas se repetirán hasta el momento en que se espera desocupar la cama salvo que se indique hasta cuándo se repetirá la secuencia.
 
-Todas las tareas aparecen en la lista en orden de ejecución. En las tareas que se repiten periódicamente, el ícono de la cama aparecerá dentro de un rectángulo. 
+Todas las tareas aparecen en la lista en orden de ejecución. En las tareas que se repiten periódicamente, el ícono de la cama aparecerá dentro de un rectángulo.
 
 Cuando falten "10 minutos para la hora programada", el color de la tarea cambiará de *gris* a *azul claro* y la hora programada a *verde*.
 
@@ -452,9 +471,9 @@ Las tareas de la lista se pueden editar haciendo clicK en ellas. Si la tarea se 
 
 Si se hace click en la tarea y luego en "Editar", se puede observar el cuadro "Se Cumplió o Cumplirá". Esta es la marca para el "momento en que efectivamente se realizará la tarea" y es por defecto dos horas después del "momento programado para la tarea". Además se puede modificar para un momento todavía posterior.
 
-Para declarar una tarea como "realizada", se supone que el hecho ya ha ocurrido, ergo, en el cuadro "Se Cumplió o Cumplirá" se colocará un momento pasado. Esto hará que al hacer click en "Guardar Edición", la tarea se elimine de la lista de tareas pendientes y se guarde en la base de datos como "Cumplida". También tiene la opción de marcarlo rápidamente con el botón "Recién Cumplida". Esto tendrá el mismo efecto sólo que se guardará con el momento actual. 
+Para declarar una tarea como "realizada", se supone que el hecho ya ha ocurrido, ergo, en el cuadro "Se Cumplió o Cumplirá" se colocará un momento pasado. Esto hará que al hacer click en "Guardar Edición", la tarea se elimine de la lista de tareas pendientes y se guarde en la base de datos como "Cumplida". También tiene la opción de marcarlo rápidamente con el botón "Recién Cumplida". Esto tendrá el mismo efecto sólo que se guardará con el momento actual.
 
-Si la tarea no se realizó ni se realizará y elige eliminarla, no se guardará en la base de datos. 
+Si la tarea no se realizó ni se realizará y elige eliminarla, no se guardará en la base de datos.
 
 
 #### **Llamadas**

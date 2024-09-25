@@ -1,6 +1,6 @@
 /****************************************************************************************************************************
   defines.h for ESP8266 HealthMQTTClient
-  
+
   Based on and modified for Javier Gottig
   Licensed under MIT license
  *****************************************************************************************************************************/
@@ -8,7 +8,7 @@
 // Wi-Fi and MQTT conection
 
 const char* ssid = "SSID";
-const char* wifipass = "wifi password";
+const char* wifipass = "network password";
 const char* broker = "192.168.0.36";
 const char* device = "Board of Room: 1"; // Put the room number to identify the device.
 const int port = 1883;
