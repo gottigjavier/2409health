@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/static/css/main.a37c43ca.css",
+    "main.js": "/static/js/main.71dcd3be.js",
+    "static/js/453.0d75070c.chunk.js": "/static/js/453.0d75070c.chunk.js",
+    "static/media/call-bell.mp3": "/static/media/call-bell.77a04d4b239dc8b47d5d.mp3",
+    "static/media/call-tone.mp3": "/static/media/call-tone.d7aa675a86de0a6db0c6.mp3",
+    "index.html": "/index.html",
+    "static/media/patient.svg": "/static/media/patient.5f20d1404fa6674213544d9d1b3b5e8a.svg",
+    "static/media/bed-solid.svg": "/static/media/bed-solid.3c25ef5b180ec52ed9b6a04a6eb15878.svg",
+    "static/media/bed-solid-white.svg": "/static/media/bed-solid-white.5facbb7bc6504c4261fc2e755304be44.svg",
+    "main.a37c43ca.css.map": "/static/css/main.a37c43ca.css.map",
+    "main.71dcd3be.js.map": "/static/js/main.71dcd3be.js.map",
+    "453.0d75070c.chunk.js.map": "/static/js/453.0d75070c.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a37c43ca.css",
+    "static/js/main.71dcd3be.js"
+  ]
+}

@@ -1,0 +1,36 @@
+.room-occupied{
+    color: rgb(81, 255, 0);
+    font-weight: 500;
+    border: rgb(81, 255, 0) solid 2px;
+    border-radius: 5px;
+    transition: background-color 1s;
+}
+
+.room-free{
+    color:rgb(218, 218, 218);
+    border: rgb(209, 209, 209) solid 1px;
+}
+
+.room-title{
+    margin:auto;
+}
+
+@media screen and (min-width: 768px) {
+    .room-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .room-title {
+        font-size: .8rem;
+    }
+}
+
+.rshdw {
+    box-shadow: 0 8px 16px 0 rgba(253, 253, 253, 0.2), 0 6px 20px 0 rgba(128, 128, 128, 0.699);
+}
+
+.rshdw:hover {
+    box-shadow: 0 12px 16px 0 rgba(182, 182, 182, 0.24), 0 17px 50px 0 rgba(141, 119, 119, 0.19);
+}

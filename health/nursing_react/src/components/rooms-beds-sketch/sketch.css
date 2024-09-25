@@ -1,0 +1,23 @@
+@media screen and (min-width: 768px) {
+    .sketch-title {
+        font-size: 2rem;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .sketch-title {
+        font-size: .8rem;
+    }
+}
+
+.sketch{
+    background-color:rgb(179, 252, 106);
+}
+
+.sshdw {
+    box-shadow: 0 8px 16px 0 rgba(253, 253, 253, 0.2), 0 6px 20px 0 rgba(128, 128, 128, 0.699);
+}
+
+.sshdw:hover {
+    box-shadow: 0 12px 16px 0 rgba(182, 182, 182, 0.24), 0 17px 50px 0 rgba(141, 119, 119, 0.19);
+}

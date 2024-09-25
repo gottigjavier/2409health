@@ -1,0 +1,120 @@
+.metal.free {
+    transition: background-color 1s;
+    background-image:
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 6%, hsla(0, 0%, 100%, .03) 7.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 0%, 0) 0%, hsla(0, 0%, 0%, 0) 4%, hsla(0, 0%, 0%, .01) 4.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 1.2%, hsla(0, 0%, 100%, .06) 2.2%),
+
+        linear-gradient(180deg, hsl(0, 0%, 78%) 0%,
+            hsl(0, 0%, 90%) 47%,
+            hsl(0, 0%, 78%) 53%,
+            hsl(0, 0%, 70%)100%);
+}
+
+.metal.occupied {
+    transition: background-color 1s;
+    color: white;
+    background-image:
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 6%, hsla(0, 0%, 100%, .03) 7.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 0%, 0) 0%, hsla(0, 0%, 0%, 0) 4%, hsla(0, 0%, 0%, .01) 4.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 1.2%, hsla(0, 0%, 100%, .06) 2.2%),
+
+        linear-gradient(180deg, hsl(120, 100%, 50%) 0%,
+            hsl(120, 100%, 66%) 47%,
+            hsl(120, 69%, 54%) 53%,
+            hsl(120, 98%, 56%)100%);
+}
+
+.metal.call {
+    color: white;
+    transition: background-color 1s;
+
+    background-image:
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 6%, hsla(0, 0%, 100%, .03) 7.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 0%, 0) 0%, hsla(0, 0%, 0%, 0) 4%, hsla(0, 0%, 0%, .01) 4.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 1.2%, hsla(0, 0%, 100%, .06) 2.2%),
+
+        linear-gradient(180deg, hsl(0, 100%, 50%) 0%,
+            hsl(0, 100%, 66%) 47%,
+            hsl(0, 69%, 54%) 53%,
+            hsl(0, 98%, 56%)100%);
+}
+
+.metal.task {
+    color: white;
+    transition: background-color 1s;
+
+    background-image:
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 6%, hsla(0, 0%, 100%, .03) 7.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 0%, 0) 0%, hsla(0, 0%, 0%, 0) 4%, hsla(0, 0%, 0%, .01) 4.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 1.2%, hsla(0, 0%, 100%, .06) 2.2%),
+
+        linear-gradient(180deg, hsl(240, 100%, 50%) 0%,
+            hsl(240, 100%, 66%) 47%,
+            hsl(240, 69%, 54%) 53%,
+            hsl(240, 98%, 56%)100%);
+}
+
+.metal.call-task {
+    color: white;
+    transition: background-color 1s;
+
+    background-image:
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 6%, hsla(0, 0%, 100%, .03) 7.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 0%, 0) 0%, hsla(0, 0%, 0%, 0) 4%, hsla(0, 0%, 0%, .01) 4.5%),
+    -webkit-repeating-linear-gradient(left, hsla(0, 0%, 100%, 0) 0%, hsla(0, 0%, 100%, 0) 1.2%, hsla(0, 0%, 100%, .06) 2.2%),
+
+        linear-gradient(180deg, hsl(290, 100%, 35%) 0%,
+            hsl(290, 100%, 51%) 47%,
+            hsl(290, 69%, 39%) 53%,
+            hsl(290, 98%, 41%)100%);
+}
+
+.bed:hover {
+    cursor: pointer;
+    color: black;
+}
+
+.bed {
+    margin: 2px;
+}
+
+.bed-title {
+    font-weight: bold;
+}
+
+.bed-avatar {
+    height: auto;
+    color: rgb(100, 99, 99);
+}
+
+@media screen and (min-width: 768px) {
+    .bed-avatar {
+        padding: auto 2px;
+        width: 2rem;
+    }
+
+    .bed-title {
+        font-size: 1.3rem;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .bed-avatar {
+        margin: -5px;
+        /* width: 1.2rem; */
+    }
+
+    .bed-title {
+        font-size: 1rem;
+    }
+}
+
+
+.bshdw {
+    box-shadow: 0 8px 16px 0 rgba(253, 253, 253, 0.2), 0 6px 20px 0 rgba(128, 128, 128, 0.699);
+}
+
+.bshdw:hover {
+    box-shadow: 0 12px 16px 0 rgba(182, 182, 182, 0.24), 0 17px 50px 0 rgba(141, 119, 119, 0.19);
+}

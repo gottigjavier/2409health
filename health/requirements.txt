@@ -1,0 +1,14 @@
+APScheduler>=3.10.4
+celery>=5.4.0
+channels>=4.1.0
+channels-redis>=4.2.0
+daphne>=4.1.2
+Django>=5.0.7
+django-environ>=0.11.2
+django-mqtt-bridge>=0.4.4
+paho-mqtt>=2.1.0
+pandas>=2.2.2
+Pillow>=10.4.0
+psycopg2-binary<=2.9.9
+selenium>=4.22.0
+websocket-client>=1.8.0
