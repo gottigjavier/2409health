@@ -5,6 +5,7 @@ import {addMinutes} from '../../../services/handlingDateTime'
 import {formattingDate, formattingTime} from '../../../services/formattingDateTime'
 import AppContext from '../../../context/appContext'
 import AlertModal from './AlertModal'
+import { authFetch } from '../../../services/api'
 
 export default function NewTaskModal({currentBed, handleShowNewTask, hideBedModal}) {
     const room = currentBed.bed_id.split(',')[0];
@@ -69,25 +70,19 @@ export default function NewTaskModal({currentBed, handleShowNewTask, hideBedModa
             if(Date.parse(programedDT) - Date.parse(timeNow) > 600000){
                 state = 'later'
             }
-            fetch('http://localhost:8000/nursing/new_task', {
+            const payload = {
+                bed_id: bedId,
+                task: textAction,
+                programed_time: programedDT,
+                repeat: repeatIsChecked
+            };
+
+            authFetch('/tasks', {
                 method: 'POST',
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'crossorigin': 'anonymous',
-                    'Cache-Control': 'no-cache'
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    bedId,
-                    programedDT,
-                    doneDT,
-                    programer,
-                    textAction,
-                    state,
-                    repeatIsChecked,
-                    repeatLapseUnit,
-                    repeatUntil,
-                    repeatLapse
-                })
+                body: JSON.stringify(payload)
             })
             .then(response =>  response.json())  
             .then(result => {

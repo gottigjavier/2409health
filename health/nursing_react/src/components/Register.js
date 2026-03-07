@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { register as apiRegister } from "../services/api";
 import "../App.css";
 import "../bootstrap.css";
+import "./register.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -155,9 +156,8 @@ function Register() {
               disabled={loading}
             />
             <label 
-              className="form-check-label" 
+              className="form-check-label register-checkbox-label" 
               htmlFor="is-leader"
-              style={{ color: '#333', cursor: 'pointer' }}
             >
               Es Encargado
             </label>

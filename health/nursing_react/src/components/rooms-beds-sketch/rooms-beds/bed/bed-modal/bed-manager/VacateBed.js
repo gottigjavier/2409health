@@ -3,6 +3,7 @@ import {formattingDateTime, formattingDate, formattingTime} from '../../../../..
 import { useState, useContext } from 'react';
 import AppContext from '../../../../../../context/appContext';
 import AlertModal from '../../../../../tasks-list/task-modal/AlertModal'
+import { authFetch } from '../../../../../../services/api'
 
 export default function VacateBed({currentBed, hideBedModal}){
     const [appState, setAppState] = useContext(AppContext)
@@ -40,22 +41,21 @@ export default function VacateBed({currentBed, hideBedModal}){
         currentBed.diagnosis = 'No Diagnosis';
         setBedState('Desocupada');
         
-        
         event.preventDefault()
         
-        fetch('http://localhost:8000/nursing/vacate_bed', {
+        const payload = {
+            bedId: bedId,
+            patientId: patientId,
+            vacateDT: vacateDT,
+            doneBy: doneBy
+        };
+
+        authFetch('/beds/vacate', {
             method: 'POST',
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                bedId,
-                patientId,
-                vacateDT,
-                doneBy
-            })
+            body: JSON.stringify(payload)
         })
         .then(response =>  response.json())  
         .then(result => {

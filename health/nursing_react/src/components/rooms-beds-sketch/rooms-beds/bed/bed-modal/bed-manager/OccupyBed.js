@@ -4,6 +4,7 @@ import './bed-manager.css'
 import {formattingDate, formattingTime} from '../../../../../../services/formattingDateTime'
 import {addDays} from '../../../../../../services/handlingDateTime'
 import AlertModal from '../../../../../tasks-list/task-modal/AlertModal'
+import { authFetch } from '../../../../../../services/api'
 
 
 export default function OccupyBed({currentBed, handleShowInfo}){
@@ -45,24 +46,24 @@ export default function OccupyBed({currentBed, handleShowInfo}){
         }
         const roomBedId = currentBed.bed_id;
         
-        fetch('http://localhost:8000/nursing/occupy_bed', {
+        const payload = {
+            roomBedId: roomBedId,
+            patientName: patientName,
+            patientSocial: patientSocial,
+            diagnosis: diagnosis,
+            occupiedDateTime: occupiedDateTime,
+            planedVacate: planedVacate,
+            doneBy: doneBy || 'Anónimo'
+        };
+
+        authFetch('/beds', {
             method: 'POST',
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                roomBedId,
-                patientName,
-                patientSocial,
-                diagnosis,
-                occupiedDateTime,
-                planedVacate,
-                doneBy
-            })
+            body: JSON.stringify(payload)
         })
-        .then(response =>  response.json())  
+        .then(response => response.json())  
         .then(result => {
             setAppState(result) //updates the context
         })

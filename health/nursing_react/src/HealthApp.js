@@ -68,8 +68,8 @@ function HealthApp() {
   }
 
   return (
-    <>
-      <div className="container justify-content-center" style={{ paddingBottom: "100px" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="container justify-content-center" style={{ flex: 1 }}>
         <div className="row">
           <div className="col-2">
             <TasksList key={"tasksComponent"} places={places} />
@@ -83,7 +83,7 @@ function HealthApp() {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
 
