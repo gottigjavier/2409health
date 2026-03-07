@@ -192,14 +192,39 @@ def login(request, data: LoginSchema):
 
 
 @api.post("/auth/register", response=UserSchema, auth=None)
-def register(request, data: UserCreateSchema):
-    user = User.objects.create_user(
-        username=data.username,
-        email=data.email,
-        password=data.password,
-        is_leader=data.is_leader,
-    )
-    return user
+def register(request):
+    """
+    Registro de usuario con soporte para imagen
+    Maneja tanto JSON como FormData
+    """
+    try:
+        # Intentar obtener datos de FormData (con archivo)
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        is_leader = request.POST.get("is_leader", "false").lower() == "true"
+        image_file = request.FILES.get("image") if hasattr(request, "FILES") else None
+
+        # Validar datos requeridos
+        if not username or not email or not password:
+            return {"error": "Username, email, and password are required"}, 400
+
+        # Crear usuario
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            is_leader=is_leader,
+        )
+
+        # Si hay una imagen, guardarla
+        if image_file:
+            user.image = image_file
+            user.save()
+
+        return user
+    except Exception as e:
+        return {"error": str(e)}, 400
 
 
 @api.post("/auth/logout")
