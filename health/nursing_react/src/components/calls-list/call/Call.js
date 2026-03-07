@@ -73,26 +73,16 @@ export default function Call({ call, callBedAndIndex}){
         const callId = currentCallId
         const callTime = currentCallTime;
         const text = textResponse === '' ? 'Respuesta Sin Novedad (por defecto)' : textResponse;
-        await fetch('http://localhost:8000/nursing/close_call', {
-            method: "POST",
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
-            },
-            body: JSON.stringify({
-                callId,
-                callTime,
-                text,
-                answeredBy
+        import('../../../services/api').then(({ authFetch, fetchLoad }) => {
+            const bed_id = call.bed_id || call.bedId || null;
+            authFetch(`/calls/${callId}/close`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ response: text, bed_id })
             })
-        })
-        .then(response =>  response.json())  
-        .then(result => {
-            setAppState(result) //updates the context
-        })
-        .catch(error => {
-            console.log(`An ERROR occurred while save the Closed Call: ${error}`);        
+            .then(() => fetchLoad())
+            .then(data => setAppState(data))
+            .catch(error => console.log(`An ERROR occurred while saving the Closed Call: ${error}`));
         })
     }    
 // ---------------------- End Closed call --------------------------------

@@ -74,7 +74,10 @@ export default function NewTaskModal({currentBed, handleShowNewTask, hideBedModa
                 bed_id: bedId,
                 task: textAction,
                 programed_time: programedDT,
-                repeat: repeatIsChecked
+                repeat: repeatIsChecked,
+                repeat_lapse: repeatLapse,
+                repeat_lapse_unit: repeatLapseUnit,
+                repeat_until: repeatUntil
             };
 
             authFetch('/tasks', {

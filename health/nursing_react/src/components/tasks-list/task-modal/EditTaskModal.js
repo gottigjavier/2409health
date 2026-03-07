@@ -58,33 +58,14 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
         } else if (Date.parse(programedDT) - Date.parse(timeNow) < 0) {
             state = 'passed'
         }
-        fetch('http://localhost:8000/nursing/edit_task', {
-            method: 'PUT',
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
-            },
-            body: JSON.stringify({
-                taskId,
-                currentBed,
-                programedDT,
-                doneDT,
-                programer,
-                editor,
-                maker,
-                textAction,
-                state,
-                active
-            })
-        })
-        .then(response =>  response.json())  
-        .then(result => {
-            setAppState(result) //updates the context
-        })
-        .catch(error => {
-            console.log(`An ERROR occurred while save the Edtited Task, ${error}`);        
-        })
+        // Use authenticated API and reload full app state so UI stays consistent
+        // Use the API helper module to update the task and reload full app state
+        import('../../../services/api').then(({ updateTask, fetchLoad }) => {
+            updateTask(taskId, { task: textAction, programed_time: programedDT })
+            .then(() => fetchLoad())
+            .then(data => setAppState(data))
+            .catch(error => console.log(`An ERROR occurred while saving the Edited Task: ${error}`));
+        });
         setTextResponse('')
         hideTaskModal()
         event.preventDefault()
@@ -103,27 +84,26 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
         const taskPk = task.id;
         const currentBed = room + ',' + bed;
         const reapeatTasksId = task.repeat_id
-        fetch('http://localhost:8000/nursing/delete_task', {
-            method: 'POST',
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
-            },
-            body: JSON.stringify({
-                taskPk,
-                currentBed,
-                reapeatTasksId,
-                repeatIsChecked
-            })
-        })
-        .then(response =>  response.json())  
-        .then(result => {
-            setAppState(result) //updates the context
-        })
-        .catch(error => {
-            console.log(`An ERROR occurred while delete Task, ${error}`);        
-        })
+        // Delete single task or, if user requested, delete all repeated occurrences.
+        import('../../../services/api').then(({ authFetch, fetchLoad }) => {
+            if (repeatIsChecked && reapeatTasksId) {
+                // No bulk-delete API; delete by repeat_id by fetching tasks then deleting each
+                // Fetch current tasks and remove those with matching repeat_id
+                fetchLoad().then(data => {
+                    const tasks = data.tasks || [];
+                    const toDelete = tasks.filter(t => t.repeat_id === reapeatTasksId).map(t => t.id);
+                    Promise.all(toDelete.map(id => authFetch(`/tasks/${id}`, { method: 'DELETE' })))
+                    .then(() => fetchLoad())
+                    .then(d => setAppState(d))
+                    .catch(err => console.log('Error deleting repeated tasks', err));
+                });
+            } else {
+                authFetch(`/tasks/${taskPk}`, { method: 'DELETE' })
+                .then(() => fetchLoad())
+                .then(d => setAppState(d))
+                .catch(error => console.log(`An ERROR occurred while deleting Task: ${error}`));
+            }
+        });
         hideTaskModal()
         event.preventDefault()
     }
@@ -224,4 +204,3 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
 }
 
 export default EditTaskModal;
-

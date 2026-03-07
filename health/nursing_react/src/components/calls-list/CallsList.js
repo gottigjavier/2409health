@@ -67,6 +67,7 @@ export default function CallsList(props){
                         elem.response_time = new Date()
                         saveCallsList.push(elem)
                     }
+                    return null
                 })
             }
             saveAnsweredCall(saveCallsList)
@@ -77,24 +78,21 @@ export default function CallsList(props){
     }
 
     const saveAnsweredCall = async (saveCallsList) => {
-        if (saveCallsList.length > 0) {            
-            await fetch('http://localhost:8000/nursing/answered_call', {
-                method: 'POST',
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'crossorigin': 'anonymous',
-                    'Cache-Control': 'no-cache'
-                },
-                body: JSON.stringify({
-                    saveCallsList
-                })
-            })
-            .then(response =>  response.json())  
-            .then(result => {
-                setAppState(result) //updates the context
-            })
-            .catch(error => {
-                console.log(`An ERROR occurred while save the Answered Call: ${error}`);        
+        if (saveCallsList.length > 0) {
+            import('../../services/api').then(({ authFetch, fetchLoad }) => {
+                const promises = saveCallsList.map(elem => {
+                    // Prefer explicit id if provided
+                    const id = elem.id || elem.pk || elem.call_id;
+                    if (id) return authFetch(`/calls/${id}/answer`, { method: 'POST' });
+                    // fallback: find call by bed in current appState.calls
+                    const match = (appState.calls || []).find(c => c.bed === elem.bed && c.state === 'active');
+                    if (match) return authFetch(`/calls/${match.id}/answer`, { method: 'POST' });
+                    return Promise.resolve();
+                });
+                Promise.all(promises)
+                .then(() => fetchLoad())
+                .then(data => setAppState(data))
+                .catch(error => console.log(`An ERROR occurred while saving the Answered Calls: ${error}`));
             })
         }
     }

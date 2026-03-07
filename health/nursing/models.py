@@ -138,6 +138,20 @@ class Task(models.Model):
     bed = models.ForeignKey(Bed, related_name="task_bed", on_delete=models.CASCADE)
     repeat = models.BooleanField(default=False)
     repeat_id = models.CharField(max_length=50, null=True, blank=True)
+    repeat_lapse = models.IntegerField(
+        null=True, blank=True
+    )  # número de unidades (2, 3, etc)
+    repeat_lapse_unit = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        choices=[
+            ("minutes", "Minutos"),
+            ("hours", "Horas"),
+            ("days", "Días"),
+        ],
+    )
+    repeat_until = models.DateTimeField(null=True, blank=True)  # hasta cuándo repetir
     task = models.TextField(default="Tarea de Rutina")
     programed_time = models.DateTimeField(null=True, blank=True)
     done_time = models.DateTimeField(null=True, blank=True)

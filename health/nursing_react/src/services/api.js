@@ -175,55 +175,79 @@ export const getCalls = async () => {
 };
 
 export const createBed = async (bedData) => {
-  const response = await authFetch('/beds', 'POST', bedData);
+  const response = await authFetch('/beds', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bedData),
+  });
   if (!response.ok) throw new Error('Failed to create bed');
   return response.json();
 };
 
 export const updateBed = async (bedId, bedData) => {
-  const response = await authFetch(`/beds/${bedId}`, 'PUT', bedData);
+  const response = await authFetch(`/beds/${bedId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bedData),
+  });
   if (!response.ok) throw new Error('Failed to update bed');
   return response.json();
 };
 
 export const vacateBed = async (bedData) => {
-  const response = await authFetch('/beds/vacate', 'POST', bedData);
+  const response = await authFetch('/beds/vacate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bedData),
+  });
   if (!response.ok) throw new Error('Failed to vacate bed');
   return response.json();
 };
 
 export const createTask = async (taskData) => {
-  const response = await authFetch('/tasks', 'POST', taskData);
+  const response = await authFetch('/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(taskData),
+  });
   if (!response.ok) throw new Error('Failed to create task');
   return response.json();
 };
 
 export const updateTask = async (taskId, taskData) => {
-  const response = await authFetch(`/tasks/${taskId}`, 'PUT', taskData);
+  const response = await authFetch(`/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(taskData),
+  });
   if (!response.ok) throw new Error('Failed to update task');
   return response.json();
 };
 
 export const completeTask = async (taskId) => {
-  const response = await authFetch(`/tasks/${taskId}/complete`, 'POST');
+  const response = await authFetch(`/tasks/${taskId}/complete`, { method: 'POST' });
   if (!response.ok) throw new Error('Failed to complete task');
   return response.json();
 };
 
 export const deleteTask = async (taskId) => {
-  const response = await authFetch(`/tasks/${taskId}`, 'DELETE');
+  const response = await authFetch(`/tasks/${taskId}`, { method: 'DELETE' });
   if (!response.ok) throw new Error('Failed to delete task');
   return response.json();
 };
 
 export const answerCall = async (callId) => {
-  const response = await authFetch(`/calls/${callId}/answer`, 'POST');
+  const response = await authFetch(`/calls/${callId}/answer`, { method: 'POST' });
   if (!response.ok) throw new Error('Failed to answer call');
   return response.json();
 };
 
 export const closeCall = async (callId, responseText) => {
-  const response = await authFetch(`/calls/${callId}/close`, 'POST', { response: responseText });
+  const response = await authFetch(`/calls/${callId}/close`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ response: responseText }),
+  });
   if (!response.ok) throw new Error('Failed to close call');
   return response.json();
 };

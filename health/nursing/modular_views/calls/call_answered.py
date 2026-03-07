@@ -14,27 +14,37 @@ import json
 # --> ans_call = await sync_to_async(ws_load)
 # Managed by try and except in consumer.py
 
+
 def answ_call(bed):
     return ws_load()
 
+
 # -----------------------------------------------------------------------------------------
+
 
 def call_answered(request):
     data = json.loads(request.body)
-    calls_list = data['saveCallsList']
+    calls_list = data["saveCallsList"]
     for answ_call in calls_list:
-        call = Call.objects.get(bed__id_bed=answ_call['bed'], state='active')
+        call = Call.objects.get(bed__id_bed=answ_call["bed"], state="active")
         if call:
             try:
-                bed = Bed.objects.get(id_bed=answ_call['bed'], active=True)
-                call.response_time = answ_call['response_time'].replace("T", " ")
-                call.state = 'answered'
-                if bed.bed_state == 'call-task':
-                    bed.bed_state = 'task'
+                bed = Bed.objects.get(id_bed=answ_call["bed"], active=True)
+                call.response_time = answ_call["response_time"].replace("T", " ")
+                call.state = "answered"
+                if bed.bed_state == "call-task":
+                    bed.bed_state = "task"
                 else:
-                    bed.bed_state = 'occupied'
+                    bed.bed_state = "occupied"
                 bed.save()
                 call.save()
+                # broadcast app state after answering
+                try:
+                    from ..app.app_ws_update import app_ws_update
+
+                    app_ws_update()
+                except Exception:
+                    pass
             except:
                 return JsonResponse({"message": "Bed answered Error."}, status=400)
         else:

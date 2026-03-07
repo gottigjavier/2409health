@@ -4,7 +4,8 @@
 // First load is through AppManager (websocket)
 
 export const fetchLoad = async () =>{
-    const loadEndPoint = 'http://localhost:8000/nursing/initial_load'
+    // kept for backwards compatibility but prefer API authFetch
+    const loadEndPoint = '/nursing/initial_load'
     const response = await fetch(loadEndPoint,
         {
             headers: {

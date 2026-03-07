@@ -43,6 +43,12 @@ function Bed (props){
         toBedState()
     }, [appState.beds])
 
+    // Ensure the bed classes update when appState changes (WS driven updates)
+    useEffect(() => {
+        // force re-render by updating currentBed from appState on any appState change
+        toBedState()
+    }, [appState])
+
     // Show Modal ---------------------------
     const showBedModal = () => {
         setShow(show => show = true);
@@ -52,9 +58,32 @@ function Bed (props){
         setShow(show => show = false);
     };
     
+    // determine visual class based on calls and tasks (take precedence over bed_state)
+    const bedIdStr = room + ',' + bed;
+    const calls = appState.calls || [];
+    const tasks = appState.tasks || [];
+    const activeCall = (calls.find(c => c.bed === bedIdStr && c.state === 'active')) !== undefined;
+    const answeredCall = (calls.find(c => c.bed === bedIdStr && c.state === 'answered')) !== undefined;
+    const relevantTasks = tasks.filter(t => t.bed === bedIdStr && t.active);
+    const hasPassedTask = relevantTasks.some(t => t.state === 'passed');
+    const hasSoonTask = relevantTasks.some(t => t.state === 'soon');
+
+    let visualState = currentBed.bed_state || 'free';
+
+    if (!currentBed.bed_active) {
+        visualState = 'free';
+    } else if (activeCall) {
+        if (hasPassedTask) visualState = 'call-task';
+        else visualState = 'call';
+    } else {
+        if (hasPassedTask) visualState = 'task';
+        else if (hasSoonTask) visualState = 'soon';
+        else visualState = 'occupied';
+    }
+
     return (       
         <>     
-            <div className={`metal card bshdw rounded bed ${currentBed.bed_state}`} id= {'b-' + room + ',' + bed} 
+            <div className={`metal card bshdw rounded bed ${visualState}`} id= {'b-' + room + ',' + bed} 
                 onClick={showBedModal} title={currentBed.patient}>
                 <div className="bed-title text-center px-2">
                     {bed + ' '}

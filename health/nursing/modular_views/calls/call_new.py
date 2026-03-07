@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from ...models import Call, Bed
-from ..app.app_ws_update import ws_load 
+from ..app.app_ws_update import ws_load, app_ws_update
 
 
 def new_call(bed):
@@ -10,21 +10,26 @@ def new_call(bed):
     except:
         active_bed = {}
     try:
-        call = Call.objects.get(state='active', bed__id_bed=bed)
+        call = Call.objects.get(state="active", bed__id_bed=bed)
     except:
         call = {}
     if not active_bed == {} and call == {}:
-        if active_bed.bed_state == 'task':
-            active_bed.bed_state = 'call-task'
+        if active_bed.bed_state == "task":
+            active_bed.bed_state = "call-task"
         else:
-            active_bed.bed_state = 'call'
+            active_bed.bed_state = "call"
         active_bed.save()
         new_call = Call()
         new_call.bed = active_bed
         new_call.call_time = datetime.now()
         new_call.response_time = datetime.now()
-        new_call.state = 'active'
+        new_call.state = "active"
         new_call.save()
+        try:
+            # Broadcast full app state so connected clients refresh automatically
+            app_ws_update()
+        except Exception:
+            pass
         return ws_load()
     else:
         pass

@@ -52,6 +52,16 @@ LOGIN_URL = "/login"  # '/nursing/login'
 
 # Application definition
 
+# corsheaders is optional in this development environment; if it's not
+# installed we skip adding it to INSTALLED_APPS and MIDDLEWARE so the
+# development server can run without failing imports.
+try:
+    import corsheaders  # type: ignore
+
+    HAS_CORS = True
+except Exception:
+    HAS_CORS = False
+
 INSTALLED_APPS = [
     "daphne",
     "django.contrib.admin",
@@ -60,14 +70,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
     "nursing",
     "nursing_react",
     "ninja_jwt",
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -76,6 +84,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+if HAS_CORS:
+    INSTALLED_APPS.insert(0, "corsheaders")
+    MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware")
 
 ROOT_URLCONF = "healthproject.urls"
 

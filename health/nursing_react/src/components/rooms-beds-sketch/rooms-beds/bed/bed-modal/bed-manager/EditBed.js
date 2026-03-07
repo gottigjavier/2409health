@@ -54,30 +54,23 @@ export default function EditBed({currentBed, handleShowInfo}){
         }
         
         const bedId = currentBed.id;
-        fetch('http://localhost:8000/nursing/edit_bed', {
-            method: 'PUT',
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'crossorigin': 'anonymous',
-                'Cache-Control': 'no-cache'
-            },
-            body: JSON.stringify({
-                bedId,
-                patientName,
-                patientSocial,
-                diagnosis,
-                occupiedDateTime,
-                planedVacate,
-                doneBy
+        import('../../../../../../services/api').then(({ authFetch, fetchLoad }) => {
+            authFetch(`/beds/${bedId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patientName,
+                    patientSocial,
+                    diagnosis,
+                    occupiedDateTime,
+                    planedVacate,
+                    doneBy
+                })
             })
-        })
-        .then(response =>  response.json())  
-        .then(result => {
-            setAppState(result) //updates the context
-        })
-        .catch(error => {
-            console.log(`An ERROR occurred while save the Edtited Bed, ${error}`);        
-        })
+            .then(() => fetchLoad())
+            .then(data => setAppState(data))
+            .catch(error => console.log(`An ERROR occurred while saving the Edited Bed: ${error}`));
+        });
         handleShowInfo()
         event.preventDefault()
     }
