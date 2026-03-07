@@ -3,8 +3,8 @@ services:
     redis:
         image: redis:7.2-alpine
         container_name: redis
-        networks: 
-            - db-net
+        networks:
+            - health-net
 
     db:
         container_name: db
@@ -18,8 +18,8 @@ services:
             - POSTGRES_DB_NAME=${DB_NAME:-db}
             - POSTGRES_USER=${DB_USER:-postgres}
             - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-        networks: 
-            - db-net
+        networks:
+            - health-net
 
     mosquitto:
         image: eclipse-mosquitto:2.0
@@ -30,7 +30,7 @@ services:
         volumes:
             - ./health/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
         networks:
-            - db-net
+            - health-net
 
     app:
         container_name: app
@@ -51,14 +51,10 @@ services:
             - db
             - redis
             - mosquitto
-        networks: 
-            - db-net
+        networks:
+            - health-net
         links:
             - db:db
 
-networks: 
-    db-net:
-        ipam:
-            driver: default
-            config:
-                - subnet: 10.10.8.0/22
+networks:
+    health-net:

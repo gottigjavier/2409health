@@ -58,17 +58,8 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    {% if user.is_authenticated %}
     <div id="root"></div>
-    {% else %}
-    <p>Redirect</p>
-    <script type="text/javascript">
-      function redirect() {
-          window.location = "http://localhost:8000/login";
-      }
-      window.onload = redirect;
-      </script>
-    {% endif %}
+  </body>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

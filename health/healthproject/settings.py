@@ -12,8 +12,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
-# for enviroment variables 
+# for enviroment variables
 import environ
 
 # Initialise environment variables
@@ -21,6 +22,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 import mimetypes
+
 mimetypes.add_type("text/css", ".css", True)
 mimetypes.add_type("text/html", ".html", True)
 mimetypes.add_type("text/javascript", ".js", True)
@@ -35,73 +37,72 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str('SECRET_KEY', default='myrealsecretkey')
+SECRET_KEY = env.str("SECRET_KEY", default="myrealsecretkey")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False #env.bool('DEBUG', default=True)
+DEBUG = False  # env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = tuple(env.list('ALLOWED_HOSTS', default=['*']))
-CORS_ORIGIN_WHITELIST = ('localhost:8000')
+ALLOWED_HOSTS = tuple(env.list("ALLOWED_HOSTS", default=["*"]))
+CORS_ORIGIN_WHITELIST = "localhost:8000"
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Login accounts/login to /login
-LOGIN_URL = '/login' # '/nursing/login'
-
-
+LOGIN_URL = "/login"  # '/nursing/login'
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne', # channels, daphne
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'nursing',
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "corsheaders",
+    "nursing",
     "nursing_react",
+    "ninja_jwt",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'healthproject.urls'
+ROOT_URLCONF = "healthproject.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'nursing_react/build')
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-#WSGI_APPLICATION = 'healthproject.wsgi.wsgi_application'
-ASGI_APPLICATION = 'healthproject.asgi.application'
+# WSGI_APPLICATION = 'healthproject.wsgi.wsgi_application'
+ASGI_APPLICATION = "healthproject.asgi.application"
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(env.str('REDIS', default='redis'), 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(env.str("REDIS", default="redis"), 6379)],
         },
     },
 }
@@ -111,24 +112,24 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env.str('DB_NAME', default='db'),
-        'USER': env.str('DB_USER', default='postgres'),
-        'PASSWORD': env.str('DB_PASSWORD', default='postgres'),
-        'HOST': env.str('DB_HOST', default='db'),
-        'PORT': 5432,
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": env.str("DB_NAME", default="db"),
+        "USER": env.str("DB_USER", default="postgres"),
+        "PASSWORD": env.str("DB_PASSWORD", default="postgres"),
+        "HOST": env.str("DB_HOST", default="db"),
+        "PORT": 5432,
     }
 }
 
-AUTH_USER_MODEL = 'nursing.User'
+AUTH_USER_MODEL = "nursing.User"
 
 # For Django>4 csrf token
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000', # This is the one
-    'http://0.0.0.0',
-    'http://localhost',
-    'http://www.localhost'
+    "http://localhost:8000",  # This is the one
+    "http://0.0.0.0",
+    "http://localhost",
+    "http://www.localhost",
 ]
 
 # Password validation
@@ -136,16 +137,16 @@ CSRF_TRUSTED_ORIGINS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -153,9 +154,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'  #'es-ar' 
+LANGUAGE_CODE = "en-us"  #'es-ar'
 
-TIME_ZONE = 'Etc/GMT+3'  # 'UTC'  #'America/Argentina/Buenos_Aires'   
+TIME_ZONE = "Etc/GMT+3"  # 'UTC'  #'America/Argentina/Buenos_Aires'
 
 USE_I18N = True
 
@@ -167,25 +168,74 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Images are saved in '/nursing/media/'
 
-MEDIA_URL= 'media/'
-MEDIA_ROOT= os.path.join(BASE_DIR + '/static/', 'media') # Ojo
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR + "/static/", "media")  # Ojo
 
 # React static files
-STATIC_ROOT = os.path.join(BASE_DIR ,'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "nursing_react/build")
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'nursing/static'),
-    os.path.join(BASE_DIR, 'nursing_react/build/static')
+    os.path.join(BASE_DIR, "nursing/static"),
+    os.path.join(BASE_DIR, "nursing_react/build/static"),
 ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+NINJA_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("ninja_jwt.authentication.JWTAuthentication",),
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 """ 
 print("BASE_DIR: ", BASE_DIR)

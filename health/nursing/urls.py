@@ -1,8 +1,6 @@
 from django.urls import path
 import os
 
-from .modular_views.user_session import login_view, logout_view, register
-
 from . import views
 from .modular_views.rooms import rooms
 
@@ -18,7 +16,4 @@ urlpatterns = [
     path("new_task", views.new_task, name="new_task"),
     path("edit_task", views.edit_task, name="edit_task"),
     path("delete_task", views.delete_task, name="delete_task"),
-    path("login", login_view, name="login"),
-    path("logout", logout_view, name="logout"),
-    path("register", register, name="register"),
 ]

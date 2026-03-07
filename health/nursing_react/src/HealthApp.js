@@ -1,65 +1,90 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./App.css";
 import "./bootstrap.css";
-import { fetchLoad } from "./services/http-queries";
+import { fetchLoad, logout } from "./services/api";
+import { appManager } from "./services/websocket";
 import Sketch from "./components/rooms-beds-sketch/Sketch";
 import CallsList from "./components/calls-list/CallsList";
 import TasksList from "./components/tasks-list/TasksList";
+import Footer from "./components/Footer";
 import AppContext from "./context/appContext";
-import { appManager } from "./services/app-socket";
 
 function HealthApp() {
   const [appState, setAppState] = useContext(AppContext);
+  const [localAppState, setLocalAppState] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const places = {
     numBeds: 4,
     numRooms: 30,
   };
 
-  // good practice to async fetch !!
-  const initialLoad = () => {
-    fetchLoad().then((initialData) => {
-      //setAppState(initialData)
-      console.log({ initialData });
-    });
+  const handleApp = (msg) => {
+    if (msg) {
+      setAppState(msg);
+      setLocalAppState(msg);
+    }
   };
 
   useEffect(() => {
-    initialLoad();
-    appManager({ handleApp });
-  }, []);
+    const init = async () => {
+      try {
+        const data = await fetchLoad();
+        setAppState(data);
+        setLocalAppState(data);
+      } catch (error) {
+        console.error("Failed to load initial data:", error);
+        logout();
+        navigate("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleApp = (msg) => {
-    msg && setAppState(msg);
-  };
+    init();
+    
+    const ws = appManager({ handleApp });
+    
+    return () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [navigate, setAppState]);
+
+  if (loading) {
+    return (
+      <>
+        <p className="bg-info text-white loading-text">Loading ... </p>
+        <p className="bg-info text-white loading-text">
+          Please wait a moment.
+        </p>
+        <p className="bg-secondary text-white loading-text">
+          If this takes too long then you can press F5
+        </p>
+      </>
+    );
+  }
 
   return (
     <>
-      {!appState ? (
-        <>
-          <p className="bg-info text-white loading-text">Loading ... </p>
-          <p className="bg-info text-white loading-text">
-            Please wait a moment.
-          </p>
-          <p className="bg-secondary text-white loading-text">
-            If this takes too long then you can press F5
-          </p>
-        </>
-      ) : (
-        <div className="container justify-content-center">
-          <div className="row">
-            <div className="col-2">
-              <TasksList key={"tasksComponent"} places={places} />
-            </div>
-            <div className="col-8">
-              <Sketch key={"sketchComponent"} places={places} />
-            </div>
-            <div className="col-2">
-              <CallsList key={"callsComponent"} places={places} />
-            </div>
+      <div className="container justify-content-center" style={{ paddingBottom: "100px" }}>
+        <div className="row">
+          <div className="col-2">
+            <TasksList key={"tasksComponent"} places={places} />
+          </div>
+          <div className="col-8">
+            <Sketch key={"sketchComponent"} places={places} />
+          </div>
+          <div className="col-2">
+            <CallsList key={"callsComponent"} places={places} />
           </div>
         </div>
-      )}
+      </div>
+      <Footer />
     </>
   );
 }
+
 export default HealthApp;

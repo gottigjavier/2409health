@@ -154,7 +154,11 @@ function Register() {
               onChange={(e) => setIsLeader(e.target.checked)}
               disabled={loading}
             />
-            <label className="form-check-label" htmlFor="is-leader">
+            <label 
+              className="form-check-label" 
+              htmlFor="is-leader"
+              style={{ color: '#333', cursor: 'pointer' }}
+            >
               Es Encargado
             </label>
           </div>

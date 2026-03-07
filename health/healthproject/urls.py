@@ -13,24 +13,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import include, path, re_path
-#from django.conf.urls.static import static
-#from django.conf import settings
 from . import settings
-from django.views.generic import TemplateView
 from django.views.static import serve
+from nursing.api import api as nursing_api
 
 static_urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
-    re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT})
+    re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
+    re_path(
+        r"^$", serve, {"document_root": settings.REACT_BUILD_DIR, "path": "index.html"}
+    ),
+    re_path(
+        r"^(?!static|media|api|admin).*$",
+        serve,
+        {"document_root": settings.REACT_BUILD_DIR, "path": "index.html"},
+    ),
 ]
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('nursing/', include('nursing.urls')),
-    path('', TemplateView.as_view(template_name='index.html')),
-    path('login', TemplateView.as_view(template_name='login.html')),
-    path("", include(static_urlpatterns))
+    path("admin/", admin.site.urls),
+    path("api/", nursing_api.urls),
+    path("nursing/", include("nursing.urls")),
+    path("", include(static_urlpatterns)),
 ]
