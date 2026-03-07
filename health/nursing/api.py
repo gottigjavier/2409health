@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.http import JsonResponse
 from ninja import NinjaAPI, ModelSchema, Schema
 from typing import Optional, List
 from datetime import datetime
@@ -188,7 +189,7 @@ def login(request, data: LoginSchema):
             "refresh": str(refresh),
             "user": user,
         }
-    return {"error": "Invalid credentials"}, 401
+    return JsonResponse({"error": "Invalid credentials"}, status=401)
 
 
 @api.post("/auth/register", response=UserSchema, auth=None)
@@ -207,7 +208,9 @@ def register(request):
 
         # Validar datos requeridos
         if not username or not email or not password:
-            return {"error": "Username, email, and password are required"}, 400
+            return JsonResponse(
+                {"error": "Username, email, and password are required"}, status=400
+            )
 
         # Crear usuario
         user = User.objects.create_user(
@@ -224,7 +227,7 @@ def register(request):
 
         return user
     except Exception as e:
-        return {"error": str(e)}, 400
+        return JsonResponse({"error": str(e)}, status=400)
 
 
 @api.post("/auth/logout")
