@@ -5,7 +5,7 @@ import {addMinutes} from '../../../services/handlingDateTime'
 import {formattingDate, formattingTime} from '../../../services/formattingDateTime'
 import AppContext from '../../../context/appContext'
 import AlertModal from './AlertModal'
-import { authFetch } from '../../../services/api'
+import { authFetch, fetchLoad } from '../../../services/api'
 
 export default function NewTaskModal({currentBed, handleShowNewTask, hideBedModal}) {
     const room = currentBed.bed_id.split(',')[0];
@@ -85,8 +85,9 @@ export default function NewTaskModal({currentBed, handleShowNewTask, hideBedModa
                 body: JSON.stringify(payload)
             })
             .then(response =>  response.json())  
-            .then(result => {
-                setAppState(result) //updates the context
+            .then(() => fetchLoad())
+            .then(data => {
+                setAppState(data) //updates the context with fresh app state
             })
             .catch(error => {
                 console.log(`An ERROR occurred while save New Task, ${error}`);        

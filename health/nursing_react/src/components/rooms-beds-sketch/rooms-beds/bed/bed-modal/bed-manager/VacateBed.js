@@ -3,7 +3,7 @@ import {formattingDateTime, formattingDate, formattingTime} from '../../../../..
 import { useState, useContext } from 'react';
 import AppContext from '../../../../../../context/appContext';
 import AlertModal from '../../../../../tasks-list/task-modal/AlertModal'
-import { authFetch } from '../../../../../../services/api'
+import { authFetch, fetchLoad } from '../../../../../../services/api'
 
 export default function VacateBed({currentBed, hideBedModal}){
     const [appState, setAppState] = useContext(AppContext)
@@ -59,8 +59,12 @@ export default function VacateBed({currentBed, hideBedModal}){
         })
         .then(response =>  response.json())  
         .then(result => {
-            console.log('Vacate bed Result ', result)
-            setAppState(result) //updates the context
+            // Reload app data after vacating bed
+            return fetchLoad();
+        })
+        .then(data => {
+            console.log('Vacate bed Result ', data)
+            setAppState(data) //updates the context with fresh data
         })
         .catch(error => {
             console.log(`An ERROR occurred while vacate Bed, ${error}`);        

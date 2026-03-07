@@ -4,7 +4,7 @@ import './bed-manager.css'
 import {formattingDate, formattingTime} from '../../../../../../services/formattingDateTime'
 import {addDays} from '../../../../../../services/handlingDateTime'
 import AlertModal from '../../../../../tasks-list/task-modal/AlertModal'
-import { authFetch } from '../../../../../../services/api'
+import { authFetch, fetchLoad } from '../../../../../../services/api'
 
 
 export default function OccupyBed({currentBed, handleShowInfo}){
@@ -65,7 +65,11 @@ export default function OccupyBed({currentBed, handleShowInfo}){
         })
         .then(response => response.json())  
         .then(result => {
-            setAppState(result) //updates the context
+            // Reload app data after occupying bed
+            return fetchLoad();
+        })
+        .then(data => {
+            setAppState(data) //updates the context with fresh data
         })
         .catch(error => {
             console.log(`An ERROR occurred while save Occupy Bed, ${error}`);        

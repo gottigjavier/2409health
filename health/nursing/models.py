@@ -1,54 +1,61 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from datetime import datetime
-#from django.utils import timezone
+
+# from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 
-mr_fs = FileSystemStorage(location='nursing/medicalrecords')
-user_fs = FileSystemStorage(location='nursing/media')
+mr_fs = FileSystemStorage(location="nursing/medicalrecords")
+user_fs = FileSystemStorage(location="nursing/media")
+
+
 class User(AbstractUser):
-    image = models.ImageField(storage=user_fs, default='useravatar.png',null=True, blank=True)
+    image = models.ImageField(
+        storage=user_fs, default="useravatar.png", null=True, blank=True
+    )
     is_leader = models.BooleanField(default=False, null=True, blank=True)
-    role = models.CharField(default='nurse', max_length=50)
-    
+    role = models.CharField(default="nurse", max_length=50)
+
     def __str__(self):
         return self.username
 
     def serialize(self):
-        if (self.image):
+        if self.image:
             return {
                 "id": self.id,
                 "username": self.username,
                 "leader": self.leader,
                 "image": self.image.url,
                 "date_joined": self.date_joined.isoformat(),
-                "role": self.role
-                }
+                "role": self.role,
+            }
         else:
             return {
                 "id": self.id,
                 "username": self.username,
-                "date_joined": self.date_joined.isoformat()
-                }
+                "date_joined": self.date_joined.isoformat(),
+            }
 
 
 class Patient(models.Model):
-    name = models.CharField(default= 'Sin Nombre', max_length=50)
-    id_card_number = models.CharField(default= '00000', null=True, max_length=50) # only in some countries
-    social_security_number = models.CharField(default= '0000', null=True, max_length=50)
-    image = models.ImageField(default='useravatar.png',null=True, blank=True)
+    name = models.CharField(default="Sin Nombre", max_length=50)
+    id_card_number = models.CharField(
+        default="00000", null=True, max_length=50
+    )  # only in some countries
+    social_security_number = models.CharField(default="0000", null=True, max_length=50)
+    image = models.ImageField(default="useravatar.png", null=True, blank=True)
     inpatient = models.BooleanField(default=True)
     admission = models.DateTimeField(auto_now_add=True)
-    diagnosis = models.TextField(default='Sin Diagnóstico')
-    short_diagnosis = models.TextField(default='Sin Diagnóstico')
-    treatment_roadmap = models.TextField(default='Sin Tratamiento')
-    action_done_by = models.CharField(default='Anónimo', max_length=50)
+    diagnosis = models.TextField(default="Sin Diagnóstico")
+    short_diagnosis = models.TextField(default="Sin Diagnóstico")
+    treatment_roadmap = models.TextField(default="Sin Tratamiento")
+    action_done_by = models.CharField(default="Anónimo", max_length=50)
 
-    #def __str__(self):
+    # def __str__(self):
     #    return self.name
 
     def serialize(self):
-        if (self.image):
+        if self.image:
             return {
                 "id": self.id,
                 "name": self.name,
@@ -60,8 +67,8 @@ class Patient(models.Model):
                 "diagnosis": self.diagnosis,
                 "short_diagnosis": self.short_diagnosis,
                 "treatment_roadmap": self.treatment_roadmap,
-                "action_done_by": self.action_done_by
-                } 
+                "action_done_by": self.action_done_by,
+            }
         else:
             return {
                 "id": self.id,
@@ -72,21 +79,28 @@ class Patient(models.Model):
                 "diagnosis": self.diagnosis,
                 "short_diagnosis": self.short_diagnosis,
                 "treatment_roadmap": self.treatment_roadmap,
-                "action_done_by": self.action_done_by
-                }         
+                "action_done_by": self.action_done_by,
+            }
+
 
 class Bed(models.Model):
     id_bed = models.CharField(max_length=10)
-    bed_patient = models.ForeignKey(Patient, related_name='bed_patient', on_delete=models.CASCADE, null=True, blank=True)
+    bed_patient = models.ForeignKey(
+        Patient,
+        related_name="bed_patient",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     active = models.BooleanField(default=False)
-    bed_state = models.CharField(max_length=30, default='free')
+    bed_state = models.CharField(max_length=30, default="free")
     # bed states: free, occupied, call, task, call-task
     occupied_time = models.DateTimeField(null=True, blank=True)
     planed_vacate = models.DateTimeField(null=True, blank=True)
     vacate_time = models.DateTimeField(null=True, blank=True)
-    action_done_by = models.CharField(default='Anónimo', max_length=50)
+    action_done_by = models.CharField(default="Anónimo", max_length=50)
 
-    #def __str__(self):
+    # def __str__(self):
     #    return self.id_bed
 
     def serialize(self):
@@ -95,14 +109,17 @@ class Bed(models.Model):
             "id_bed": self.id_bed,
             "bed_patient": self.bed_patient.name,
             "bed_state": self.bed_state,
-            "action_done_by": self.action_done_by
-            } 
+            "action_done_by": self.action_done_by,
+        }
+
 
 class MedicalRecord(models.Model):
-    patient = models.OneToOneField(Patient, related_name='record_patient', on_delete=models.CASCADE)
+    patient = models.OneToOneField(
+        Patient, related_name="record_patient", on_delete=models.CASCADE
+    )
     medical_record_id = models.CharField(max_length=50, null=True)
     medical_record_file = models.FileField(storage=mr_fs, null=True)
-    action_done_by = models.CharField(default='Anónimo', max_length=50)
+    action_done_by = models.CharField(default="Anónimo", max_length=50)
 
     def __str__(self):
         return self.medical_record_id
@@ -113,22 +130,23 @@ class MedicalRecord(models.Model):
             "patient": self.patient.name,
             "medical_record_id": self.medical_record_id,
             "medical_record_file": self.medical_record_file,
-            "action_done_by": self.action_done_by
-            } 
+            "action_done_by": self.action_done_by,
+        }
+
 
 class Task(models.Model):
-    bed = models.ForeignKey(Bed, related_name='task_bed', on_delete=models.CASCADE)
+    bed = models.ForeignKey(Bed, related_name="task_bed", on_delete=models.CASCADE)
     repeat = models.BooleanField(default=False)
     repeat_id = models.CharField(max_length=50, null=True, blank=True)
-    task = models.TextField(default='Tarea de Rutina')
+    task = models.TextField(default="Tarea de Rutina")
     programed_time = models.DateTimeField(null=True, blank=True)
     done_time = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=False)
-    state = models.CharField(default='soon', max_length=15) # later, soon, passed
-    programed_by = models.CharField(default='Anónimo', max_length=50)
-    task_done_by = models.CharField(default='Pendiente', max_length=50)
-    action_done_by = models.CharField(default='Anónimo', max_length=50)
-    
+    state = models.CharField(default="soon", max_length=15)  # later, soon, passed
+    programed_by = models.CharField(default="Anónimo", max_length=50)
+    task_done_by = models.CharField(default="Pendiente", max_length=50)
+    action_done_by = models.CharField(default="Anónimo", max_length=50)
+
     def serialize(self):
         return {
             "id": self.id,
@@ -139,22 +157,27 @@ class Task(models.Model):
             "patient": self.bed.bed_patient.name,
             "task": self.task,
             "programed_time": self.programed_time.isoformat(),
-            "done_time": self.done_time.isoformat(),
+            "done_time": self.done_time.isoformat() if self.done_time else None,
             "active": self.active,
             "state": self.state,
             "programed_by": self.programed_by,
             "task_done_by": self.task_done_by,
-            "action_done_by": self.action_done_by
-            } 
+            "action_done_by": self.action_done_by,
+        }
+
 
 class Call(models.Model):
-    bed = models.ForeignKey(Bed, related_name='call_bed', on_delete=models.CASCADE)
-    response = models.TextField(default='Resapuesta sin novedad')
+    bed = models.ForeignKey(Bed, related_name="call_bed", on_delete=models.CASCADE)
+    response = models.TextField(default="Resapuesta sin novedad")
     call_time = models.DateTimeField(null=True, blank=True)
-    response_time = models.DateTimeField(null=True, blank=True) # This field is writen when call is answered
-    state = models.CharField(default='active', max_length=20) # active, answered, closed
-    action_done_by = models.CharField(default='Anónimo', max_length=50)
-    # call states : active, answered, closed 
+    response_time = models.DateTimeField(
+        null=True, blank=True
+    )  # This field is writen when call is answered
+    state = models.CharField(
+        default="active", max_length=20
+    )  # active, answered, closed
+    action_done_by = models.CharField(default="Anónimo", max_length=50)
+    # call states : active, answered, closed
 
     def serialize(self):
         return {
@@ -162,11 +185,13 @@ class Call(models.Model):
             "bed_id": self.bed.pk,
             "bed": self.bed.id_bed,
             "patient": self.bed.bed_patient.name,
-            "call_time": self.call_time.isoformat(),
-            "response_time": self.response_time.isoformat(),
+            "call_time": self.call_time.isoformat() if self.call_time else None,
+            "response_time": self.response_time.isoformat()
+            if self.response_time
+            else None,
             "response": self.response,
             "state": self.state,
-            "action_done_by": self.action_done_by
+            "action_done_by": self.action_done_by,
         }
 
 
@@ -184,5 +209,5 @@ class Record(models.Model):
             "action": self.action,
             "time": self.time.isoformat(),
             "before": self.before,
-            "after": self.after
+            "after": self.after,
         }
