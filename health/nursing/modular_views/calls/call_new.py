@@ -1,35 +1,43 @@
-import json
+# import json
 from datetime import datetime
+from django.db import transaction
 from ...models import Call, Bed
 from ..app.app_ws_update import ws_load, app_ws_update
 
 
 def new_call(bed):
-    try:
-        active_bed = Bed.objects.get(id_bed=bed, active=True)
-    except:
-        active_bed = {}
-    try:
-        call = Call.objects.get(state="active", bed__id_bed=bed)
-    except:
-        call = {}
-    if not active_bed == {} and call == {}:
+    with transaction.atomic():
+        try:
+            active_bed = Bed.objects.select_for_update().get(id_bed=bed, active=True)
+        except Exception:
+            active_bed = {}
+
+        if active_bed == {}:
+            print(f"new_call: bed {bed} not found or not active")
+            return ws_load()
+
+        existing_call = Call.objects.filter(state="active", bed__id_bed=bed).first()
+        if existing_call:
+            print(f"new_call: active call already exists for bed {bed}")
+            return ws_load()
+
         if active_bed.bed_state == "task":
             active_bed.bed_state = "call-task"
         else:
             active_bed.bed_state = "call"
         active_bed.save()
+
         new_call = Call()
         new_call.bed = active_bed
         new_call.call_time = datetime.now()
         new_call.response_time = datetime.now()
         new_call.state = "active"
         new_call.save()
+
+        print(f"new_call: created call for bed {bed}")
+
         try:
-            # Broadcast full app state so connected clients refresh automatically
             app_ws_update()
         except Exception:
             pass
         return ws_load()
-    else:
-        pass

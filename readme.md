@@ -111,6 +111,29 @@ sudo chmod uo+rw /dev/ttyUSB0
 
 ```
 
+**Permisos USB**
+
+Para poder subir código a tu placa Arduino, añade tu usuario al grupo dialout:
+
+```
+sudo usermod -a -G dialout $USER
+```
+
+Reinicia tu sesión o reinicia el sistema para aplicar los cambios. 
+
+En Arch Linux y distribuciones basadas en Arch, el grupo `dialout` no existe. El grupo equivalente para acceder a dispositivos seriales como Arduino es **`uucp`**. 
+
+Para solucionarlo, ejecuta:
+
+```bash
+sudo usermod -a -G uucp $USER
+```
+
+Luego, **cierra sesión y vuelve a iniciar** para que los cambios surtan efecto. 
+
+Este grupo `uucp` es el estándar en Arch Linux para gestionar permisos de dispositivos seriales (como `/dev/ttyACM0` o `/dev/ttyUSB0`).
+
+
 
 ### Configuración del archivo settings.py
 

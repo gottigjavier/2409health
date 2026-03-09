@@ -1,5 +1,5 @@
 import Task from './task/Task'
-import {useContext, useEffect, useState} from 'react';
+import {useContext, useEffect, useState, useRef} from 'react';
 import './tasks-list.css'
 import {tasksManager} from '../../services/tasks-socket'
 import AppContext from '../../context/appContext'
@@ -12,7 +12,8 @@ function TasksList({places}){
     const tasksList = appState.tasks || []
     const [tList, setTList] = useState(appState.tasks)
     const [bList, setBList] = useState(appState.beds)
-    const [showButton, setShowButton] = useState(true)
+    const [showButton, setShowButton] = useState(true);
+    const prevPassedTasksRef = useRef(new Set());
     
     // Setup the new Howl.
     const sounder = new Howl({
@@ -29,12 +30,23 @@ function TasksList({places}){
             tasks :  tList,
             beds :  bList
         })          
-        alertTask()
     } ,[bList, tList])
         
 
     const handleTasks = msg => {
-        setTList(msg.tasks_list)
+        const newTasks = msg.tasks_list || [];
+        const newPassedIds = new Set(newTasks.filter(t => t.state === 'passed' && t.active).map(t => t.id));
+        
+        // Only play sound if there are NEW passed tasks that weren't passed before
+        // This prevents sound when completing/deleting tasks
+        const hasNewPassed = Array.from(newPassedIds).some(id => !prevPassedTasksRef.current.has(id));
+        
+        if (hasNewPassed && newPassedIds.size > 0) {
+            sounder.play();
+        }
+        
+        prevPassedTasksRef.current = newPassedIds;
+        setTList(newTasks)
         setBList(msg.beds_list)
     }
 

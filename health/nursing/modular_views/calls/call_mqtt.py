@@ -20,7 +20,7 @@ def mqtt_service():
         try:
             data = json.loads(msg)
             # no need to send status // without "," -> answer call
-            if not ",0" in data["id"]:
+            if ",0" not in data["bed"]:
                 data["state"] = True
             else:
                 data["state"] = False
@@ -28,13 +28,13 @@ def mqtt_service():
                 if data["state"]:
                     key = data["key"]
                     state = data["state"]
-                    bed = data["id"]
+                    bed = data["bed"]
                     n_call = new_call(bed)
                     call = {"key": key, "state": state, "bed": bed, "call": n_call}
                 else:
                     key = data["key"]
                     state = data["state"]
-                    bed = data["id"]
+                    bed = data["bed"]
                     ans_call = ws_load()
                     call = {"key": key, "state": state, "bed": bed, "call": ans_call}
                 layer = get_channel_layer()
@@ -47,7 +47,7 @@ def mqtt_service():
                 )
             else:
                 print("Clave incorrecta. Cuidado!!! Posible hacking!!")
-        except:
+        except Exception:
             print("Desde views: El dato tiene formato incorrecto")
 
     try:
@@ -68,5 +68,5 @@ def mqtt_service():
 
         client.loop_start()
         # client.loop_forever()
-    except:
+    except Exception:
         print("no mqtt broker found")

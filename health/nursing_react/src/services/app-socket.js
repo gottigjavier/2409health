@@ -1,22 +1,31 @@
     //----------- App Section websocket - channel through consumer.py -----------
+    import { getWsUrl } from './websocket'
+
     export const appManager = ({handleApp}) => {
-        const call = new WebSocket('ws://127.0.0.1:8000/ws/appData/');
+        const wsUrl = getWsUrl('/ws/appData/')
+        const call = new WebSocket(wsUrl);
             call.onopen = () => {
-                console.log('App contected');
+                console.log('App connected');
             };
 
             call.onmessage = e => {
-                const msg = JSON.parse(e.data);
-                handleApp(msg);   
+                try {
+                    const msg = JSON.parse(e.data);
+                    console.debug('WS app message received', { beds: msg.beds ? msg.beds.length : undefined, calls: msg.calls ? msg.calls.length : undefined, tasks: msg.tasks ? msg.tasks.length : undefined });
+                    handleApp(msg);
+                } catch (err) {
+                    console.error('Failed parsing app WS message', err, e.data);
+                }
             };
 
             call.onerror = e => {
-                console.log(e);
+                console.log('App WS error:', e);
             };
 
             call.onclose = e => {
-                console.log('App closed');
-                console.log(e);
+                console.log('App closed:', e.code, e.reason);
             };
+
+        return call;
     }
     // -------- End App section websocket - channel -------------------

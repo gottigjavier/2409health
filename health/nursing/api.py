@@ -865,6 +865,43 @@ def update_task(request, task_id: int, data: TaskEditSchema):
     except Exception as e:
         # return a clear JSON error instead of a 500/422
         return JsonResponse({"error": f"Failed saving task: {str(e)}"}, status=400)
+
+    # After updating the task, adjust the bed state if task was marked as done/completed
+    if getattr(data, "done_time", None) or (getattr(data, "active", None) == False):
+        try:
+            from .models import Bed, Call
+
+            bed = task.bed
+            if bed and bed.active:
+                # Check remaining active tasks for this bed (all states)
+                remaining_tasks = Task.objects.filter(bed=bed, active=True)
+                has_passed = remaining_tasks.filter(state="passed").exists()
+                has_soon = remaining_tasks.filter(state="soon").exists()
+                has_later = remaining_tasks.filter(state="later").exists()
+
+                # Check for active calls
+                has_active_call = Call.objects.filter(bed=bed, state="active").exists()
+
+                if has_active_call:
+                    if has_passed:
+                        bed.bed_state = "call-task"
+                    elif has_soon or has_later:
+                        bed.bed_state = "call"
+                    else:
+                        bed.bed_state = "call"
+                else:
+                    if has_passed:
+                        bed.bed_state = "task"
+                    elif has_soon:
+                        bed.bed_state = "soon"
+                    elif has_later:
+                        bed.bed_state = "later"
+                    else:
+                        bed.bed_state = "occupied"
+                bed.save()
+        except Exception:
+            pass
+
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -881,6 +918,42 @@ def complete_task(request, task_id: int):
     task.done_time = datetime.now()
     task.task_done_by = request.user.username
     task.save()
+    # After marking the task completed, adjust the bed state if needed.
+    try:
+        from .models import Bed, Call
+
+        bed = task.bed
+        if bed and bed.active:
+            # Check remaining active tasks for this bed (all states)
+            remaining_tasks = Task.objects.filter(bed=bed, active=True)
+            has_passed = remaining_tasks.filter(state="passed").exists()
+            has_soon = remaining_tasks.filter(state="soon").exists()
+            has_later = remaining_tasks.filter(state="later").exists()
+
+            # Check for active calls
+            has_active_call = Call.objects.filter(bed=bed, state="active").exists()
+
+            if has_active_call:
+                if has_passed:
+                    bed.bed_state = "call-task"
+                elif has_soon or has_later:
+                    bed.bed_state = "call"
+                else:
+                    bed.bed_state = "call"
+            else:
+                if has_passed:
+                    bed.bed_state = "task"
+                elif has_soon:
+                    bed.bed_state = "soon"
+                elif has_later:
+                    bed.bed_state = "later"
+                else:
+                    bed.bed_state = "occupied"
+            bed.save()
+    except Exception:
+        # don't let bed-update failures break API
+        pass
+
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -892,7 +965,38 @@ def complete_task(request, task_id: int):
 
 @api.delete("/tasks/{int:task_id}", auth=jwtauth)
 def delete_task(request, task_id: int):
-    Task.objects.get(id=task_id).delete()
+    # Get task and bed before deleting
+    try:
+        task = Task.objects.get(id=task_id)
+        bed = task.bed
+        task.delete()
+
+        # After deleting the task, adjust the bed state if needed.
+        if bed and bed.active:
+            # Check remaining active tasks for this bed
+            remaining_tasks = Task.objects.filter(bed=bed, active=True)
+            has_passed = remaining_tasks.filter(state="passed").exists()
+            has_soon = remaining_tasks.filter(state="soon").exists()
+
+            # Check for active calls
+            has_active_call = Call.objects.filter(bed=bed, state="active").exists()
+
+            if has_active_call:
+                if has_passed:
+                    bed.bed_state = "call-task"
+                else:
+                    bed.bed_state = "call"
+            else:
+                if has_passed:
+                    bed.bed_state = "task"
+                elif has_soon:
+                    bed.bed_state = "soon"
+                else:
+                    bed.bed_state = "occupied"
+            bed.save()
+    except Task.DoesNotExist:
+        pass
+
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -915,6 +1019,26 @@ def answer_call(request, call_id: int):
     call.response_time = datetime.now()
     call.action_done_by = request.user.username
     call.save()
+
+    # Update bed_state after answering the call
+    try:
+        bed = call.bed
+        if bed and bed.active:
+            from .models import Task
+
+            bed_tasks = Task.objects.filter(bed=bed, active=True)
+            has_passed = any(t.state == "passed" for t in bed_tasks)
+            has_soon = any(t.state == "soon" for t in bed_tasks)
+            if has_passed:
+                bed.bed_state = "task"
+            elif has_soon:
+                bed.bed_state = "soon"
+            else:
+                bed.bed_state = "occupied"
+            bed.save()
+    except Exception as e:
+        pass
+
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -931,6 +1055,26 @@ def close_call(request, call_id: int, data: CallResponseSchema):
     call.response = data.response
     call.action_done_by = request.user.username
     call.save()
+
+    # Update bed_state after closing the call
+    try:
+        bed = call.bed
+        if bed and bed.active:
+            from .models import Task
+
+            bed_tasks = Task.objects.filter(bed=bed, active=True)
+            has_passed = any(t.state == "passed" for t in bed_tasks)
+            has_soon = any(t.state == "soon" for t in bed_tasks)
+            if has_passed:
+                bed.bed_state = "task"
+            elif has_soon:
+                bed.bed_state = "soon"
+            else:
+                bed.bed_state = "occupied"
+            bed.save()
+    except Exception as e:
+        pass
+
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 

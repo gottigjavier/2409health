@@ -20,6 +20,11 @@ export const appManager = ({ handleApp }) => {
 
   call.onmessage = e => {
     const msg = JSON.parse(e.data);
+    console.debug('WS app message received', {
+      beds: msg.beds ? msg.beds.length : undefined,
+      calls: msg.calls ? msg.calls.length : undefined,
+      tasks: msg.tasks ? msg.tasks.length : undefined,
+    });
     handleApp(msg);
   };
 
@@ -44,6 +49,10 @@ export const callManager = ({ handleCall }) => {
 
   call.onmessage = e => {
     const msg = JSON.parse(e.data);
+    console.debug('WS call message received', {
+      type: msg && msg.state !== undefined ? (msg.state ? 'new' : 'answered') : 'unknown',
+      hasCall: !!msg.call,
+    });
     handleCall(msg);
   };
 
@@ -68,6 +77,7 @@ export const taskManager = ({ handleTasks }) => {
 
   call.onmessage = e => {
     const msg = JSON.parse(e.data);
+    console.debug('WS task message received', { tasks: msg.tasks ? msg.tasks.length : undefined });
     handleTasks(msg);
   };
 

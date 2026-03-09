@@ -46,9 +46,13 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
         const currentBed = room + ',' + bed;
         let active = taskState;
         let state = 'soon';
+        let doneTimeSent = null;
+        
+        // Check if done time is in the past - mark task as completed
         if(Date.parse(doneDT) < Date.parse(timeNow)){
             textAction = `${textResponse}(Done)`
             active = false
+            doneTimeSent = doneDT; // Send done_time to backend
         }
         if(Date.parse(programedDT) - Date.parse(timeNow) > 600000){
             state = 'later'
@@ -58,10 +62,20 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
         } else if (Date.parse(programedDT) - Date.parse(timeNow) < 0) {
             state = 'passed'
         }
+        
         // Use authenticated API and reload full app state so UI stays consistent
-        // Use the API helper module to update the task and reload full app state
         import('../../../services/api').then(({ updateTask, fetchLoad }) => {
-            updateTask(taskId, { task: textAction, programed_time: programedDT })
+            const updateData = { 
+                task: textAction, 
+                programed_time: programedDT,
+                active: active
+            };
+            // Include done_time if task is being marked as completed
+            if (doneTimeSent) {
+                updateData.done_time = doneTimeSent;
+            }
+            
+            updateTask(taskId, updateData)
             .then(() => fetchLoad())
             .then(data => setAppState(data))
             .catch(error => console.log(`An ERROR occurred while saving the Edited Task: ${error}`));
@@ -72,12 +86,14 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
     }
 
     const doneTask = () => {
-        setDoneDate(formattingDate('y-m-d', new Date()))
-        setDoneTime(formattingTime('h:m:s', new Date()))
-        setTaskState(false)
-        setDoneBy(doneBy)
-        setTaskEditor(taskEditor)
-        setTextResponse(textResponse => textResponse = `${textResponse}(Done)`)
+        // Call the complete API to mark task as done and update bed_state
+        import('../../../services/api').then(({ completeTask, fetchLoad }) => {
+            completeTask(task.id)
+            .then(() => fetchLoad())
+            .then(data => setAppState(data))
+            .catch(error => console.log(`Error completing task: ${error}`));
+        });
+        hideTaskModal();
     } 
     
     const deleteTask = event => {
@@ -171,7 +187,7 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
                                 <p>
                                 <small className='small'>*Guardar tarea ya realizada: ingrese cuándo se realizó y presione "Guardar Edición", o presione "Recién Cumplida"</small>
                                 </p>
-                                <button onClick={doneTask} id="task-done" className="tmshdw done btn m-1" title="Recién Cumplida">Recién Cumplida</button>
+                                <button type="button" onClick={doneTask} id="task-done" className="tmshdw done btn m-1" title="Recién Cumplida">Recién Cumplida</button>
                             </div>
                         </div>
                         <div className="justify-content-center row"> 
@@ -184,7 +200,7 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
                                 <input type="submit" value="Guardar Edición" id="task-send" className="tmshdw save btn m-1" title="Guardar"/>
                             </div>
                             <div className='col border border-secondary mt-1 mb-4 mx-4'>
-                                <button onClick={deleteTask} id="task-delete" className="tmshdw delete btn m-1 float-left" title="Eliminar Tarea">Eliminar Tarea</button>
+                                <button type="button" onClick={deleteTask} id="task-delete" className="tmshdw delete btn m-1 float-left" title="Eliminar Tarea">Eliminar Tarea</button>
                                     <label className='align-middle mycheck-box'>
                                     <input type='checkbox' id='check-repeat' name='check-repeat' className= ''
                                     onChange= {event => setRepeatIsChecked(event.target.checked)} checked={repeatIsChecked}/>

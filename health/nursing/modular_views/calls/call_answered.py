@@ -1,8 +1,11 @@
+import logging
 from django.http import JsonResponse
 from ...models import Call, Bed
 from ..app.app_load import load
 from ..app.app_ws_update import ws_load
 import json
+
+logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
@@ -30,6 +33,7 @@ def call_answered(request):
         if call:
             try:
                 bed = Bed.objects.get(id_bed=answ_call["bed"], active=True)
+                prev_bed_state = bed.bed_state
                 call.response_time = answ_call["response_time"].replace("T", " ")
                 call.state = "answered"
                 if bed.bed_state == "call-task":
@@ -38,11 +42,22 @@ def call_answered(request):
                     bed.bed_state = "occupied"
                 bed.save()
                 call.save()
+                logger.info(
+                    "call_answered: bed=%s prev_state=%s new_state=%s call_id=%s",
+                    bed.id_bed,
+                    prev_bed_state,
+                    bed.bed_state,
+                    call.id,
+                )
                 # broadcast app state after answering
                 try:
                     from ..app.app_ws_update import app_ws_update
 
                     app_ws_update()
+                    logger.info(
+                        "call_answered: broadcasted app_ws_update after answer of call %s",
+                        call.id,
+                    )
                 except Exception:
                     pass
             except:

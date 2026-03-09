@@ -49,6 +49,14 @@ function Bed (props){
         toBedState()
     }, [appState])
 
+    // Log bed state transitions to help debugging WS ordering issues
+    useEffect(() => {
+        const bedId = room + ',' + bed;
+        const callsLen = (appState.calls || []).filter(c => c.bed === bedId).length;
+        const tasksLen = (appState.tasks || []).filter(t => t.bed === bedId).length;
+        console.debug('Bed render', { bed: bedId, currentBed: currentBed.bed_state, bed_active: currentBed.bed_active, calls: callsLen, tasks: tasksLen });
+    }, [currentBed, appState.calls, appState.tasks]);
+
     // Show Modal ---------------------------
     const showBedModal = () => {
         setShow(show => show = true);
@@ -80,6 +88,11 @@ function Bed (props){
         else if (hasSoonTask) visualState = 'soon';
         else visualState = 'occupied';
     }
+
+    // log the computed visual state for debugging
+    useEffect(() => {
+        console.debug('Bed visualState computed', { bed: bedIdStr, visualState });
+    }, [visualState, bedIdStr]);
 
     return (       
         <>     

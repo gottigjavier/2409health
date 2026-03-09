@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from 'react';
+import {useContext, useEffect, useState, useRef} from 'react';
 import './calls-list.css';
 import Call from './call/Call';
 import {callsManager} from '../../services/calls-socket';
@@ -10,11 +10,17 @@ import {Howl} from 'howler';
 
 
 export default function CallsList(props){
-    const [appState, setAppState] = useContext(AppContext); // looks like hook?
+    const [appState, setAppState] = useContext(AppContext);
+    const appStateRef = useRef(appState);
     const [listCallsLen, setListCallsLen] = useState(appState.calls.length);
     const places = props.places;
     let AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = new AudioContext();
+    const recentlyProcessedRef = useRef({});
+
+    useEffect(() => {
+        appStateRef.current = appState;
+    }, [appState]);
 
 
     // Setup the new Howl.
@@ -37,17 +43,37 @@ export default function CallsList(props){
     }, [appState.calls.length])
 
     const handleCall = async msg => {
-        if (msg.state){
-            if(msg.call){
-                await setAppState(msg.call)
-                setListCallsLen(msg.call.calls.length)
-                sounder.play() // First alert. Next handled by component "Call"
-            } else {
-                console.log('Repeated Call or Unoccupied Bed')
+        if (!msg) return;
+        
+        if (msg.call === null || msg.call === undefined) {
+            return;
+        }
+
+        const callsArr = (msg.call && msg.call.calls) ? msg.call.calls : (msg.calls || []);
+        const incomingBed = msg.call?.bed || msg.bed;
+        const isNewCall = msg.state === true || (msg.call && msg.call.state) === true;
+
+        if (isNewCall && incomingBed) {
+            if (recentlyProcessedRef.current[incomingBed]) {
+                return;
             }
-        } else {
-            setAppState(msg.call)
-            setListCallsLen(msg.call.calls.length)
+            
+            const existingCall = appStateRef.current.calls.find(c => c.bed === incomingBed && c.state === 'active');
+            if (existingCall) {
+                return;
+            }
+            
+            recentlyProcessedRef.current[incomingBed] = true;
+            
+            setTimeout(() => {
+                delete recentlyProcessedRef.current[incomingBed];
+            }, 500);
+        }
+
+        setAppState(prev => ({ ...prev, calls: callsArr }));
+        setListCallsLen(callsArr.length);
+
+        if (!isNewCall) {
             answeredCall(msg);
         }
     }

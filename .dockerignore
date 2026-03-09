@@ -4,16 +4,13 @@
 **/__pycache__
 **/.github
 **/node_modules
-**/src
-**/public
 **/.eslin*
 **/cache
 **/docke*
 **/manualbuild.sh
 Dockerfile
-**/packa*
 **/.env
 **/record
 **/medicalrecords
-**/yarn.*
+**/yarn.lock
 **/readme.md
