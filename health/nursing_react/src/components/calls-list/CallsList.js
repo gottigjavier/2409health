@@ -3,8 +3,6 @@ import './calls-list.css';
 import Call from './call/Call';
 import {callsManager} from '../../services/calls-socket';
 import AppContext from '../../context/appContext';
-import sounds from '../../media/call-tone.mp3';
-import {Howl} from 'howler';
 
 
 
@@ -14,8 +12,6 @@ export default function CallsList(props){
     const appStateRef = useRef(appState);
     const [listCallsLen, setListCallsLen] = useState(appState.calls.length);
     const places = props.places;
-    let AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = new AudioContext();
     const recentlyProcessedRef = useRef({});
 
     useEffect(() => {
@@ -23,19 +19,8 @@ export default function CallsList(props){
     }, [appState]);
 
 
-    // Setup the new Howl.
-    const sounder = new Howl({
-        src: [sounds]
-    });
-        
     useEffect(() => {
         callsManager({handleCall})
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-        return(() => {
-            audioCtx.suspend()
-        })
     }, [])
 
     useEffect(() => {
@@ -53,13 +38,11 @@ export default function CallsList(props){
         const incomingBed = msg.call?.bed || msg.bed;
         const isNewCall = msg.state === true || (msg.call && msg.call.state) === true;
 
+        const currentCalls = appState.calls;
+        
         if (isNewCall && incomingBed) {
-            if (recentlyProcessedRef.current[incomingBed]) {
-                return;
-            }
-            
-            const existingCall = appStateRef.current.calls.find(c => c.bed === incomingBed && c.state === 'active');
-            if (existingCall) {
+            const existingCall = currentCalls.find(c => c.bed === incomingBed && c.state === 'active');
+            if (existingCall || recentlyProcessedRef.current[incomingBed]) {
                 return;
             }
             

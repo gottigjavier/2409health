@@ -23,7 +23,11 @@ from nursing.api import django_register
 
 static_urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
-    re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
+    re_path(
+        r"^static/(?P<path>.*)$",
+        serve,
+        {"document_root": settings.REACT_BUILD_DIR + "/static"},
+    ),
     re_path(
         r"^$", serve, {"document_root": settings.REACT_BUILD_DIR, "path": "index.html"}
     ),

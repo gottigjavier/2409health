@@ -1,6 +1,6 @@
 import './call.css'
 import CallModal from '../call-modal/CallModal'
-import {useState, useContext, useEffect} from 'react'
+import {useState, useContext, useEffect, useRef} from 'react'
 import AppContext from '../../../context/appContext'
 import bedAvatar from '../../../media/bed-solid-white.svg'
 import sounds from '../../../media/call-tone.mp3';
@@ -14,30 +14,41 @@ export default function Call({ call, callBedAndIndex}){
     const [appState, setAppState] = useContext(AppContext); // looks like hook?
     const [show, setShow]= useState(false)
     const [callEventId, setCallEventId] = useState('');
+    const audioCtxRef = useRef(null);
 
     // Setup the new Howl.
     const sounder = new Howl({
-        src: [sounds]
+        src: [sounds],
+        onload: () => console.log('Sound loaded for bed:', call.bed),
+        onplay: () => console.log('Sound playing for bed:', call.bed),
+        onloaderror: (id, err) => console.log('Sound load error:', err)
     });
 
+    useEffect(() => {
+        if (!audioCtxRef.current) {
+            audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+            audioCtxRef.current.resume();
+        }
+    }, []);
 
     useEffect(() => {
-        const launcher = setInterval( () => {
-            alertCall(launcher)
-        }, 15000);
+        if (call.state !== 'active') return;
+        
+        const playSound = () => {
+            console.log('Playing sound for bed:', call.bed);
+            sounder.play();
+        };
+        
+        playSound();
+        
+        const intervalId = setInterval(playSound, 15000);
+        
         return(() => {
-            clearInterval(launcher)
+            clearInterval(intervalId);
         })
-    }, [call.state])
-
-    const alertCall = (launcher) => {
-        if(call.state === 'active'){
-            sounder.play()
-        } else {
-            sounder.stop()
-            clearInterval(launcher)
-        }
-    }
+    }, [call.state, call.bed])
 
     // To display in title
     const patient = () => {

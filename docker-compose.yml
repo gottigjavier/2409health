@@ -40,6 +40,7 @@ services:
             dockerfile: Dockerfile
         volumes:
             - ./health:/health/
+            - ./health/nursing_react/build:/health/nursing_react/build/
         ports:
             - "8000:8000"
         environment:
