@@ -5,7 +5,7 @@ import AppContext from './context/appContext';
 import HealthApp from './HealthApp';
 import Login from './components/Login';
 import Register from './components/Register';
-import { isAuthenticated, logout } from './services/api';
+import { isAuthenticated, logout, getUser } from './services/api';
 
 function App() {
   const [appState, setAppState] = useState();
@@ -28,7 +28,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={!isAuthenticated() ? <Login /> : <Navigate to="/" />} />
-          <Route path="/register" element={!isAuthenticated() ? <Register /> : <Navigate to="/" />} />
+          <Route 
+            path="/register" 
+            element={
+              isAuthenticated() && getUser()?.is_leader === true 
+                ? <Register /> 
+                : <Navigate to="/" />
+            } 
+          />
           <Route path="/*" element={isAuthenticated() ? <HealthApp /> : <Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>

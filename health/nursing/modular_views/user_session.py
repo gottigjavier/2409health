@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from .data_analytics import recording
+from .data_analytics import save_event
 from ..models import User
 
 
@@ -21,9 +21,9 @@ def login_view(request):
             login(request, user)
             return HttpResponseRedirect(reverse("home"))
         else:
-            return render(request, "login.html", {
-                "message": "Invalid username and/or password."
-            })
+            return render(
+                request, "login.html", {"message": "Invalid username and/or password."}
+            )
     else:
         return render(request, "login.html")
 
@@ -32,12 +32,13 @@ def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("login"))
 
+
 @login_required
 def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
-        is_leader = request.POST.get("is-leader", False) # for the future
+        is_leader = request.POST.get("is-leader", False)  # for the future
 
         if is_leader == "on":
             leader = True
@@ -48,9 +49,9 @@ def register(request):
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
-            return render(request, "register.html", {
-                "message": "Passwords must match."
-            })
+            return render(
+                request, "register.html", {"message": "Passwords must match."}
+            )
 
         # Attempt to create new user
         try:
@@ -59,15 +60,20 @@ def register(request):
             user.is_staff = leader
             user.image = request.FILES.get("image", "useravatar.png")
             user.save()
-            recording(request.user.username, 'register new user', 'none', 'new user registered as: ' + username)
+            save_event(
+                request.user.username,
+                "register new user",
+                "none",
+                "new user registered as: " + username,
+            )
         except IntegrityError:
-            return render(request, "register.html", {
-                "message": "Username already taken."
-            })
+            return render(
+                request, "register.html", {"message": "Username already taken."}
+            )
         login(request, user)
         return HttpResponseRedirect(reverse("home"))
     else:
         return render(request, "register.html")
 
-# ------------------ End User manager -----------------------
 
+# ------------------ End User manager -----------------------

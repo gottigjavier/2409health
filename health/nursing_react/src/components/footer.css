@@ -28,6 +28,11 @@
   flex-wrap: wrap;
 }
 
+.footer-logo {
+  border-radius: 4px;
+  object-fit: contain;
+}
+
 .footer-label {
   font-weight: 600;
   color: #495057;

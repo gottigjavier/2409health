@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 import "../bootstrap.css";
 import { isAuthenticated, login as apiLogin, logout as apiLogout, getUser } from "../services/api";
@@ -8,6 +8,7 @@ import Sketch from "./rooms-beds-sketch/Sketch";
 import CallsList from "./calls-list/CallsList";
 import TasksList from "./tasks-list/TasksList";
 import AppContext from "../context/appContext";
+import favicon from "../nursing_favicon.ico";
 
 function Login() {
   const navigate = useNavigate();
@@ -33,6 +34,9 @@ function Login() {
       <div className="row mt-4">
         <div className="col-4"></div>
         <div className="text-center col-4">
+          <div className="brand-logo mb-3">
+            <img src={favicon} alt="Logo" width="80" height="80" />
+          </div>
           <h2>Iniciar Sesión</h2>
           {error && <div className="alert alert-danger">{error}</div>}
           <form onSubmit={handleSubmit}>
@@ -63,10 +67,6 @@ function Login() {
         <div className="col-4"></div>
       </div>
       <br />
-      <hr />
-      <div className="text-center">
-        ¿No está registrado? <Link to="/register">Regístrese aquí.</Link>
-      </div>
     </>
   );
 }

@@ -30,7 +30,7 @@ except Exception:
         pass
 
 
-from .models import User, Patient, Bed, Task, Call, Record
+from .models import User, Patient, Bed, Task, Call, Event
 import paho.mqtt.client as mqtt
 import json
 from urllib.parse import parse_qs
@@ -71,6 +71,7 @@ class UserSchema(ModelSchema):
             "username",
             "email",
             "is_leader",
+            "is_superuser",
             "role",
             "image",
             "date_joined",
@@ -484,7 +485,10 @@ def django_register(request):
     username = parsed.get("username")
     email = parsed.get("email")
     password = parsed.get("password")
-    is_leader = parsed.get("is_leader", False)
+    is_leader_raw = parsed.get("is_leader", False)
+    is_leader = (
+        str(is_leader_raw).lower() in ("true", "1", "yes") if is_leader_raw else False
+    )
 
     if not username or not email or not password:
         return JsonResponse(
@@ -867,7 +871,7 @@ def update_task(request, task_id: int, data: TaskEditSchema):
         return JsonResponse({"error": f"Failed saving task: {str(e)}"}, status=400)
 
     # After updating the task, adjust the bed state if task was marked as done/completed
-    if getattr(data, "done_time", None) or (getattr(data, "active", None) == False):
+    if getattr(data, "done_time", None) or (not getattr(data, "active", None)):
         try:
             from .models import Bed, Call
 
@@ -1141,7 +1145,13 @@ def initial_load(request):
     return load()
 
 
-@api.get("/records", response=List[dict], auth=jwtauth)
-def list_records(request):
-    records = Record.objects.all().order_by("-time")[:100]
-    return [r.serialize() for r in records]
+@api.get("/events", response=List[dict], auth=jwtauth)
+def list_events(request):
+    events = Event.objects.all().order_by("-time")[:100]
+    return [e.serialize() for e in events]
+
+
+@api.get("/events/{int:event_id}", response=dict, auth=jwtauth)
+def get_event(request, event_id: int):
+    event = Event.objects.get(id=event_id)
+    return event.serialize()

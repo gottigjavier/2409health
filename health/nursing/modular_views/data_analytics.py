@@ -1,36 +1,42 @@
-import pandas as pd
+# import pandas as pd
 from datetime import datetime
-from ..models import Record
+from ..models import Event
 
-# ------------------ Record ---------------------------------
-def recording(loged_user, action, before, after):
-    record = Record()
+
+# ------------------ Event ---------------------------------
+def save_event(loged_user, action, before, after):
+    event = Event()
     try:
-        record.loged_user = loged_user
-        record.action = action
-        record.time = datetime.now()
-        record.before = before
-        record.after = after
-        record.save()
+        event.loged_user = loged_user
+        event.action = action
+        event.time = datetime.now()
+        event.before = before
+        event.after = after
+        event.save()
         return
-    except:
-        print ('Error. Record no saved')
+    except Exception as e:
+        print("Error. Event no saved ", e)
         return
-# ---------------- End of Record ----------------------------
+
+
+# ---------------- End of Event ----------------------------
 
 
 # ---------------- Begin Data Analytics ----------------------------
 
+
+# Unused
 def data_analytics():
-    datas = Record.objects.all()
-    if datas:
-        serialized_data = [data.serialize() for data in datas]
-    else:
-        serialized_data = []
-    #print(serialized_data)
-    df = pd.DataFrame(serialized_data)
-    recording_path = "nursing/record/recording.csv"
-    df.to_csv(recording_path, sep=";")
-    print("Data for Analysis saved in: " + recording_path)
+    pass
+    #datas = Event.objects.all()
+    #if datas:
+    #    serialized_data = [data.serialize() for data in datas]
+    #else:
+    #    serialized_data = []
+    #df = pd.DataFrame(serialized_data)
+    #events_path = "nursing/event/events.csv"
+    #df.to_csv(events_path, sep=";")
+    #print("Data for Analysis saved in: " + events_path)
+
 
 # ---------------- end Data Analytics ----------------------------

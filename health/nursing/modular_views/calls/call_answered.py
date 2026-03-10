@@ -60,7 +60,7 @@ def call_answered(request):
                     )
                 except Exception:
                     pass
-            except:
+            except Exception:
                 return JsonResponse({"message": "Bed answered Error."}, status=400)
         else:
             return JsonResponse({"message": "Call does not exist."}, status=400)

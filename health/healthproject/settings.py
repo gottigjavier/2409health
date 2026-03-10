@@ -77,6 +77,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,6 +85,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 if HAS_CORS:
     INSTALLED_APPS.insert(0, "corsheaders")
@@ -114,7 +116,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(env.str("REDIS", default="redis"), 6379)],
+            "hosts": [(env.str("REDIS", default="localhost"), 6379)],
         },
     },
 }
@@ -129,7 +131,7 @@ DATABASES = {
         "NAME": env.str("DB_NAME", default="db"),
         "USER": env.str("DB_USER", default="postgres"),
         "PASSWORD": env.str("DB_PASSWORD", default="postgres"),
-        "HOST": env.str("DB_HOST", default="db"),
+        "HOST": env.str("DB_HOST", default="localhost"),
         "PORT": 5432,
     }
 }
@@ -180,21 +182,27 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
-# Images are saved in '/nursing/media/'
+# Donde collectstatic deposita TODO
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # Cambiado de "static" a "staticfiles"
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = os.path.join(BASE_DIR + "/static/", "media")  # Ojo
-
-# React static files
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-REACT_BUILD_DIR = os.path.join(BASE_DIR, "nursing_react/build")
-
+# Fuentes de estáticos (no debe superponerse con STATIC_ROOT)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "nursing/static"),
     os.path.join(BASE_DIR, "nursing_react/build/static"),
 ]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # Simplificado
+
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "nursing_react/build")
+
+WHITENOISE_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True  # Solo en desarrollo
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

@@ -49,7 +49,8 @@ function EditTaskModal({ hideTaskModal, show, task, taskBedAndIndex}) {
         let doneTimeSent = null;
         
         // Check if done time is in the past - mark task as completed
-        if(Date.parse(doneDT) < Date.parse(timeNow)){
+        // Only mark as done if user explicitly set a done date/time
+        if(doneDate && doneTime && Date.parse(doneDT) < Date.parse(timeNow)){
             textAction = `${textResponse}(Done)`
             active = false
             doneTimeSent = doneDT; // Send done_time to backend

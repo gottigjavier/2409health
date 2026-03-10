@@ -24,15 +24,23 @@ from nursing.api import django_register
 static_urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     re_path(
-        r"^static/(?P<path>.*)$",
+        r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}
+    ),
+    re_path(
+        r"^react-static/(?P<path>.*)$",
         serve,
         {"document_root": settings.REACT_BUILD_DIR + "/static"},
+    ),
+    re_path(
+        r"^favicon\.ico$",
+        serve,
+        {"document_root": settings.REACT_BUILD_DIR, "path": "favicon.ico"},
     ),
     re_path(
         r"^$", serve, {"document_root": settings.REACT_BUILD_DIR, "path": "index.html"}
     ),
     re_path(
-        r"^(?!static|media|api|admin).*$",
+        r"^(?!static|media|api|admin|react-static|favicon).*$",
         serve,
         {"document_root": settings.REACT_BUILD_DIR, "path": "index.html"},
     ),

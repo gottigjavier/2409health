@@ -1,5 +1,5 @@
 import { useEffect, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route } from "react-router-dom";
 import "./App.css";
 import "./bootstrap.css";
 import { fetchLoad, logout } from "./services/api";
@@ -9,6 +9,7 @@ import CallsList from "./components/calls-list/CallsList";
 import TasksList from "./components/tasks-list/TasksList";
 import Footer from "./components/Footer";
 import AppContext from "./context/appContext";
+import EventsList from "./components/events-list/EventsList";
 
 function HealthApp() {
   const [appState, setAppState] = useContext(AppContext);
@@ -70,17 +71,23 @@ function HealthApp() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div className="container justify-content-center" style={{ flex: 1 }}>
-        <div className="row">
-          <div className="col-2">
-            <TasksList key={"tasksComponent"} places={places} />
-          </div>
-          <div className="col-8">
-            <Sketch key={"sketchComponent"} places={places} />
-          </div>
-          <div className="col-2">
-            <CallsList key={"callsComponent"} places={places} />
-          </div>
-        </div>
+        <Routes>
+          <Route path="/" element={
+            <div className="row">
+              <div className="col-2">
+                <TasksList key={"tasksComponent"} places={places} />
+              </div>
+              <div className="col-8">
+                <Sketch key={"sketchComponent"} places={places} />
+              </div>
+              <div className="col-2">
+                <CallsList key={"callsComponent"} places={places} />
+              </div>
+            </div>
+          } />
+          <Route path="/events" element={<EventsList />} />
+          <Route path="/events/:id" element={<EventsList />} />
+        </Routes>
       </div>
       <Footer />
     </div>

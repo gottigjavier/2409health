@@ -1,5 +1,6 @@
 export function formattingDateTime(format='d-m-y', propDateTime){
-    const dateTimeData = propDateTime || new Date();
+    if (!propDateTime) return '';
+    const dateTimeData = propDateTime;
     let dateTime;
     if(typeof(dateTimeData) === 'object'){
         const year = dateTimeData.getFullYear();
@@ -44,7 +45,8 @@ export function formattingDateTime(format='d-m-y', propDateTime){
 }
 
 export function formattingDate(format='d-m-y', propDate){
-    const dateData = propDate || new Date();
+    if (!propDate) return '';
+    const dateData = propDate;
     let exitDate;
     if(typeof(dateData) === 'object'){
         const year = dateData.getFullYear();
@@ -106,7 +108,8 @@ export function formattingDate(format='d-m-y', propDate){
 }
 
 export function formattingTime(format='h:m:s', propTime){
-    const timeData = propTime || new Date();
+    if (!propTime) return '';
+    const timeData = propTime;
     let exitTime;
     if(typeof(timeData) === 'object'){
         const hrs = timeData.getHours();

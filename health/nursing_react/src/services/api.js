@@ -252,6 +252,18 @@ export const closeCall = async (callId, responseText) => {
   return response.json();
 };
 
+export const getEvents = async () => {
+  const response = await authFetch('/events');
+  if (!response.ok) throw new Error('Failed to fetch events');
+  return response.json();
+};
+
+export const getEvent = async (eventId) => {
+  const response = await authFetch(`/events/${eventId}`);
+  if (!response.ok) throw new Error('Failed to fetch event');
+  return response.json();
+};
+
 export default {
   isAuthenticated,
   getUser,
@@ -274,4 +286,6 @@ export default {
   deleteTask,
   answerCall,
   closeCall,
+  getEvents,
+  getEvent,
 };

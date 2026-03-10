@@ -1,10 +1,10 @@
 .register-checkbox-label {
-  color: #333 !important;
+  color: #999 !important;
   cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {
   .register-checkbox-label {
-    color: #333 !important;
+    color: #999 !important;
   }
 }

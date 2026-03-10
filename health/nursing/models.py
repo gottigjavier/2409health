@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from datetime import datetime
 
 # from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
@@ -14,7 +13,7 @@ class User(AbstractUser):
         storage=user_fs, default="useravatar.png", null=True, blank=True
     )
     is_leader = models.BooleanField(default=False, null=True, blank=True)
-    role = models.CharField(default="nurse", max_length=50)
+    role = models.CharField(default="nurse", max_length=50)  # office, doctor, nurse
 
     def __str__(self):
         return self.username
@@ -209,7 +208,7 @@ class Call(models.Model):
         }
 
 
-class Record(models.Model):
+class Event(models.Model):
     loged_user = models.CharField(default="User", max_length=50)
     action = models.CharField(default="No Action", max_length=50)
     time = models.DateTimeField(null=True, blank=True)

@@ -4,6 +4,7 @@ import { register as apiRegister } from "../services/api";
 import "../App.css";
 import "../bootstrap.css";
 import "./register.css";
+import favicon from "../nursing_favicon.ico";
 
 function Register() {
   const navigate = useNavigate();
@@ -90,6 +91,9 @@ function Register() {
     <div className="row mt-4">
       <div className="col-4"></div>
       <div className="text-center col-4">
+        <div className="brand-logo mb-3">
+          <img src={favicon} alt="Logo" width="80" height="80" />
+        </div>
         <h2>Registrar</h2>
 
         {message && <div className="alert alert-success">{message}</div>}

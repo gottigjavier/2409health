@@ -35,3 +35,4 @@ staticfiles/
 .github/
 .rdb
 *.csv
+.fuff_cache/
