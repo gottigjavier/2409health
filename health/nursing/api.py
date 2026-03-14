@@ -4,7 +4,6 @@ from django.db import IntegrityError
 from ninja import NinjaAPI, ModelSchema, Schema
 from typing import Optional, List
 from datetime import datetime
-from ninja.security import HttpBearer
 
 # ninja_jwt is optional in this environment; provide a safe fallback when
 # the package isn't installed so module import won't crash during tests.
@@ -31,6 +30,7 @@ except Exception:
 
 
 from .models import User, Patient, Bed, Task, Call, Event
+from .modular_views.data_analytics import save_event
 import paho.mqtt.client as mqtt
 import json
 from urllib.parse import parse_qs
@@ -59,8 +59,8 @@ def send_mqtt_cancel_call(bed_id_str):
         client.publish("mqtt/call/", json.dumps(message))
         client.disconnect()
         print(f"✓ MQTT Cancel message sent for: {bed_id_str}")
-    except Exception as e:
-        print(f"✗ Error sending MQTT cancel: {str(e)}")
+    except Exception:
+        print("✗ Error sending MQTT cancel")
 
 
 class UserSchema(ModelSchema):
@@ -172,13 +172,12 @@ class BedInputSchema(Schema):
 
 
 class BedEditSchema(Schema):
-    bedId: int
-    patientName: str
-    patientSocial: str
-    diagnosis: str
-    occupiedDateTime: str
-    planedVacate: str
-    doneBy: str
+    patientName: Optional[str] = None
+    patientSocial: Optional[str] = None
+    diagnosis: Optional[str] = None
+    occupiedDateTime: Optional[str] = None
+    planedVacate: Optional[str] = None
+    doneBy: Optional[str] = None
 
 
 class VacateSchema(Schema):
@@ -260,28 +259,7 @@ def register(request, body: dict = None):
     """
     django_req = getattr(request, "_request", request)
 
-    # small debug snapshot to help reproduce issues during tests
-    try:
-        meta = {}
-        try:
-            meta = {
-                k: str(v)
-                for k, v in dict(getattr(django_req, "META", {})).items()
-                if k in ("CONTENT_TYPE", "CONTENT_LENGTH")
-            }
-        except Exception:
-            meta = {}
-        snapshot = {
-            "req_content_type": getattr(request, "content_type", None),
-            "req_body_attr": repr(getattr(request, "body", None))[:1000],
-            "django_body_attr": repr(getattr(django_req, "body", None))[:1000],
-            "meta_snippet": meta,
-        }
-        # Debug snapshot generation left intentionally inert in production.
-        # Previously this wrote to /tmp which was used during debugging; remove
-        # active file writes to avoid leaving artifacts in the host environment.
-    except Exception:
-        pass
+    # Debug snapshot removed - was used during development
 
     parsed = {}
     # If Ninja provided parsed body, prefer it
@@ -639,6 +617,16 @@ def create_bed(request, data: Optional[BedInputSchema] = None, payload: dict = N
         planed_vacate=planed_vac,
         action_done_by=parsed.get("doneBy") or "Anónimo",
     )
+    before = "No patient; bed not created"
+    after = (
+        f"bed.id: {bed.id}; bed.id_bed: {bed.id_bed}; "
+        f"patient.id: {patient.id}; patient.name: {patient.name}; "
+        f"bed.active: {bed.active}; bed.bed_state: {bed.bed_state}; "
+        f"bed.occupied_time: {bed.occupied_time}; "
+        f"bed.planed_vacate: {bed.planed_vacate}; "
+        f"bed.action_done_by: {bed.action_done_by}"
+    )
+    save_event(request.user.username, "occupy bed", before, after)
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -652,18 +640,45 @@ def create_bed(request, data: Optional[BedInputSchema] = None, payload: dict = N
 def update_bed(request, bed_id: int, data: BedEditSchema):
     bed = Bed.objects.get(id=bed_id)
     patient = bed.bed_patient
-    bed.occupied_time = datetime.strptime(
-        data.occupiedDateTime.replace("T", " "), "%Y-%m-%d %H:%M"
+    before = (
+        f"bed.id: {bed.id}; bed.id_bed: {bed.id_bed}; "
+        f"bed.occupied_time: {bed.occupied_time}; bed.planed_vacate: {bed.planed_vacate}; "
+        f"bed.action_done_by: {bed.action_done_by}; "
+        f"patient.name: {patient.name}; patient.social_security_number: {patient.social_security_number}; "
+        f"patient.short_diagnosis: {patient.short_diagnosis}"
     )
-    bed.planed_vacate = datetime.strptime(
-        data.planedVacate.replace("T", " "), "%Y-%m-%d %H:%M"
-    )
-    bed.action_done_by = data.doneBy
-    patient.name = data.patientName
-    patient.social_security_number = data.patientSocial
-    patient.short_diagnosis = data.diagnosis
+    if data.occupiedDateTime and data.occupiedDateTime.strip():
+        try:
+            bed.occupied_time = datetime.strptime(
+                data.occupiedDateTime.replace("T", " "), "%Y-%m-%d %H:%M"
+            )
+        except Exception:
+            pass
+    if data.planedVacate and data.planedVacate.strip():
+        try:
+            bed.planed_vacate = datetime.strptime(
+                data.planedVacate.replace("T", " "), "%Y-%m-%d %H:%M"
+            )
+        except Exception:
+            pass
+    if data.doneBy and data.doneBy.strip():
+        bed.action_done_by = data.doneBy
+    if data.patientName and data.patientName.strip():
+        patient.name = data.patientName
+    if data.patientSocial and data.patientSocial.strip():
+        patient.social_security_number = data.patientSocial
+    if data.diagnosis and data.diagnosis.strip():
+        patient.short_diagnosis = data.diagnosis
     patient.save()
     bed.save()
+    after = (
+        f"bed.id: {bed.id}; bed.id_bed: {bed.id_bed}; "
+        f"bed.occupied_time: {bed.occupied_time}; bed.planed_vacate: {bed.planed_vacate}; "
+        f"bed.action_done_by: {bed.action_done_by}; "
+        f"patient.name: {patient.name}; patient.social_security_number: {patient.social_security_number}; "
+        f"patient.short_diagnosis: {patient.short_diagnosis}"
+    )
+    save_event(request.user.username, "edit bed", before, after)
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -677,6 +692,15 @@ def update_bed(request, bed_id: int, data: BedEditSchema):
 def vacate_bed(request, data: VacateSchema):
     patient = Patient.objects.get(id=data.patientId)
     bed = Bed.objects.get(id=data.bedId)
+
+    before = (
+        f"bed.id: {bed.id}; bed.id_bed: {bed.id_bed}; "
+        f"bed.active: {bed.active}; bed.bed_state: {bed.bed_state}; "
+        f"bed.occupied_time: {bed.occupied_time}; bed.planed_vacate: {bed.planed_vacate}; "
+        f"bed.vacate_time: {bed.vacate_time}; bed.action_done_by: {bed.action_done_by}; "
+        f"patient.id: {patient.id}; patient.name: {patient.name}; "
+        f"patient.inpatient: {patient.inpatient}"
+    )
 
     # Obtener el room ID del bed_id (formato: "room,bed")
     room_id = (
@@ -701,6 +725,16 @@ def vacate_bed(request, data: VacateSchema):
     bed.action_done_by = data.doneBy if data.doneBy else "Anónimo"
     patient.save()
     bed.save()
+
+    after = (
+        f"bed.id: {bed.id}; bed.id_bed: {bed.id_bed}; "
+        f"bed.active: {bed.active}; bed.bed_state: {bed.bed_state}; "
+        f"bed.occupied_time: {bed.occupied_time}; bed.planed_vacate: {bed.planed_vacate}; "
+        f"bed.vacate_time: {bed.vacate_time}; bed.action_done_by: {bed.action_done_by}; "
+        f"patient.id: {patient.id}; patient.name: {patient.name}; "
+        f"patient.inpatient: {patient.inpatient}"
+    )
+    save_event(request.user.username, "vacate bed", before, after)
     try:
         from .modular_views.app.app_ws_update import app_ws_update
 
@@ -790,9 +824,9 @@ def create_task(request, data: TaskInputSchema):
                 task.state,
                 request.user.username,
             )
-        except Exception as e:
+        except Exception as exc:
             # don't fail the main request if repeat generation has an issue
-            print(f"Error generating repeated tasks: {e}")
+            print(f"Error generating repeated tasks: {exc}")
 
     try:
         from .modular_views.app.app_ws_update import app_ws_update
@@ -800,6 +834,22 @@ def create_task(request, data: TaskInputSchema):
         app_ws_update()
     except Exception:
         pass
+
+    before = (
+        f"task.pk: None; bed.pk: {bed.pk}; bed_id: {bed.id_bed}; "
+        f"task.repeat: {task.repeat}; task.repeat_id: {task.repeat_id}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: False; task.state: None; "
+        f"task.programed_by: {task.programed_by}"
+    )
+    after = (
+        f"task.pk: {task.pk}; bed.pk: {bed.pk}; bed_id: {bed.id_bed}; "
+        f"task.repeat: {task.repeat}; task.repeat_id: {task.repeat_id}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: {task.active}; "
+        f"task.state: {task.state}; task.programed_by: {task.programed_by}"
+    )
+    save_event(request.user.username, "new task", before, after)
 
     return task
 
@@ -815,6 +865,15 @@ def update_task(request, task_id: int, data: TaskEditSchema):
         print(f"update_task called with: task_id={task_id}, data={data}")
     except Exception:
         pass
+
+    before = (
+        f"task.pk: {task.pk}; bed.pk: {task.bed.pk}; bed_id: {task.bed.id_bed}; "
+        f"task.repeat: {task.repeat}; task.repeat_id: {task.repeat_id}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: {task.active}; "
+        f"task.state: {task.state}; task.programed_by: {task.programed_by}; "
+        f"task.task_done_by: {task.task_done_by}"
+    )
 
     # Only set fields provided by the client
     if getattr(data, "task", None) is not None:
@@ -834,11 +893,11 @@ def update_task(request, task_id: int, data: TaskEditSchema):
             except Exception:
                 try:
                     pt = datetime.strptime(pt_str, "%Y-%m-%d %H:%M")
-                except Exception:
+                except Exception as exc:
                     try:
                         pt = datetime.strptime(pt_str, "%Y-%m-%d %H:%M:%S")
-                    except Exception as e:
-                        print(f"Failed parsing programed_time '{pt_raw}': {e}")
+                    except Exception:
+                        print(f"Failed parsing programed_time '{pt_raw}': {exc}")
                         raise
         except Exception:
             # fallback to now to avoid failing the whole request; caller may retry
@@ -866,14 +925,14 @@ def update_task(request, task_id: int, data: TaskEditSchema):
         task.active = data.active
     try:
         task.save()
-    except Exception as e:
+    except Exception as exc:
         # return a clear JSON error instead of a 500/422
-        return JsonResponse({"error": f"Failed saving task: {str(e)}"}, status=400)
+        return JsonResponse({"error": f"Failed saving task: {str(exc)}"}, status=400)
 
     # After updating the task, adjust the bed state if task was marked as done/completed
     if getattr(data, "done_time", None) or (not getattr(data, "active", None)):
         try:
-            from .models import Bed, Call
+            from .models import Call
 
             bed = task.bed
             if bed and bed.active:
@@ -912,19 +971,36 @@ def update_task(request, task_id: int, data: TaskEditSchema):
         app_ws_update()
     except Exception:
         pass
+
+    after = (
+        f"task.pk: {task.pk}; bed.pk: {task.bed.pk}; bed_id: {task.bed.id_bed}; "
+        f"task.repeat: {task.repeat}; task.repeat_id: {task.repeat_id}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: {task.active}; "
+        f"task.state: {task.state}; task.programed_by: {task.programed_by}; "
+        f"task.task_done_by: {task.task_done_by}"
+    )
+    save_event(request.user.username, "edit task", before, after)
+
     return task
 
 
 @api.post("/tasks/{int:task_id}/complete", response=TaskSchema, auth=jwtauth)
 def complete_task(request, task_id: int):
     task = Task.objects.get(id=task_id)
+    before = (
+        f"task.pk: {task.pk}; bed.pk: {task.bed.pk}; bed_id: {task.bed.id_bed}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: {task.active}; "
+        f"task.state: {task.state}; task.task_done_by: {task.task_done_by}"
+    )
     task.active = False
     task.done_time = datetime.now()
     task.task_done_by = request.user.username
     task.save()
     # After marking the task completed, adjust the bed state if needed.
     try:
-        from .models import Bed, Call
+        from .models import Call
 
         bed = task.bed
         if bed and bed.active:
@@ -964,6 +1040,15 @@ def complete_task(request, task_id: int):
         app_ws_update()
     except Exception:
         pass
+
+    after = (
+        f"task.pk: {task.pk}; bed.pk: {task.bed.pk}; bed_id: {task.bed.id_bed}; "
+        f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+        f"task.done_time: {task.done_time}; task.active: {task.active}; "
+        f"task.state: {task.state}; task.task_done_by: {task.task_done_by}"
+    )
+    save_event(request.user.username, "complete task", before, after)
+
     return task
 
 
@@ -973,6 +1058,12 @@ def delete_task(request, task_id: int):
     try:
         task = Task.objects.get(id=task_id)
         bed = task.bed
+        before = (
+            f"task.pk: {task.pk}; bed.pk: {bed.pk}; bed_id: {bed.id_bed}; "
+            f"task.task: {task.task}; task.programed_time: {task.programed_time}; "
+            f"task.done_time: {task.done_time}; task.active: {task.active}; "
+            f"task.state: {task.state}; task.task_done_by: {task.task_done_by}"
+        )
         task.delete()
 
         # After deleting the task, adjust the bed state if needed.
@@ -1007,6 +1098,10 @@ def delete_task(request, task_id: int):
         app_ws_update()
     except Exception:
         pass
+
+    after = "task deleted"
+    save_event(request.user.username, "delete task", before, after)
+
     return {"message": "Task deleted"}
 
 
@@ -1019,6 +1114,12 @@ def list_calls(request):
 @api.post("/calls/{int:call_id}/answer", response=CallSchema, auth=jwtauth)
 def answer_call(request, call_id: int):
     call = Call.objects.get(id=call_id)
+    bed = call.bed
+    before = (
+        f"call.pk: {call.pk}; bed_id: {bed.id_bed}; call.call_time: {call.call_time}; "
+        f"call.response_time: {call.response_time}; call.state: {call.state}; "
+        f"call.action_done_by: {call.action_done_by}"
+    )
     call.state = "answered"
     call.response_time = datetime.now()
     call.action_done_by = request.user.username
@@ -1040,7 +1141,7 @@ def answer_call(request, call_id: int):
             else:
                 bed.bed_state = "occupied"
             bed.save()
-    except Exception as e:
+    except Exception:
         pass
 
     try:
@@ -1049,12 +1150,26 @@ def answer_call(request, call_id: int):
         app_ws_update()
     except Exception:
         pass
+
+    after = (
+        f"call.pk: {call.pk}; bed_id: {bed.id_bed}; call.call_time: {call.call_time}; "
+        f"call.response_time: {call.response_time}; call.state: {call.state}; "
+        f"call.action_done_by: {call.action_done_by}"
+    )
+    save_event(request.user.username, "answer call", before, after)
+
     return call
 
 
 @api.post("/calls/{int:call_id}/close", response=CallSchema, auth=jwtauth)
 def close_call(request, call_id: int, data: CallResponseSchema):
     call = Call.objects.get(id=call_id)
+    bed = call.bed
+    before = (
+        f"call.pk: {call.pk}; bed_id: {bed.id_bed}; call.call_time: {call.call_time}; "
+        f"call.response_time: {call.response_time}; call.state: {call.state}; "
+        f"call.response: {call.response}; call.action_done_by: {call.action_done_by}"
+    )
     call.state = "closed"
     call.response = data.response
     call.action_done_by = request.user.username
@@ -1076,7 +1191,7 @@ def close_call(request, call_id: int, data: CallResponseSchema):
             else:
                 bed.bed_state = "occupied"
             bed.save()
-    except Exception as e:
+    except Exception:
         pass
 
     try:
@@ -1085,6 +1200,14 @@ def close_call(request, call_id: int, data: CallResponseSchema):
         app_ws_update()
     except Exception:
         pass
+
+    after = (
+        f"call.pk: {call.pk}; bed_id: {bed.id_bed}; call.call_time: {call.call_time}; "
+        f"call.response_time: {call.response_time}; call.state: {call.state}; "
+        f"call.response: {call.response}; call.action_done_by: {call.action_done_by}"
+    )
+    save_event(request.user.username, "close call", before, after)
+
     return call
 
 

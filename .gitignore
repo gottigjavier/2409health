@@ -36,3 +36,5 @@ staticfiles/
 .rdb
 *.csv
 .fuff_cache/
+.gga
+AGENTS.md

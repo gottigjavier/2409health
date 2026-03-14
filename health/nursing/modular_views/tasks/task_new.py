@@ -1,6 +1,7 @@
 from ...models import Task, Bed
 from ..data_analytics import save_event
 from datetime import datetime
+from dateutil import parser
 import json
 import random
 
@@ -18,10 +19,12 @@ def modular_new_task(request):
     task_repeat_lapse = data["repeatLapse"]
     task_repeat_lapse_unit = data["repeatLapseUnit"]
     task_repeat_until = data["repeatUntil"]
-    try:
-        programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M:%S")
-    except Exception:
-        programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M")
+    #try:
+    #    programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M:%S")
+    #except Exception:
+    #    programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M")
+    # Esto detecta automáticamente si trae segundos o no
+    programed_date_time = parser.parse(programed_time)
     programed_time_float = programed_date_time.timestamp()
     task_repeat_id = str(programed_time_float * random.random())
     bed = Bed.objects.get(id=bed_id)
@@ -138,24 +141,33 @@ def save_repeated_tasks(
         time_factor = int(task_repeat_lapse) * 3600  # seconds
     if task_repeat_lapse_unit == "days":
         time_factor = int(task_repeat_lapse) * 86400  # seconds
-    try:
-        task_repeat_until_date_time = datetime.strptime(
-            task_repeat_until, "%Y-%m-%d %H:%M:%S"
-        )
-    except Exception:
-        task_repeat_until_date_time = datetime.strptime(
-            task_repeat_until, "%Y-%m-%d %H:%M"
-        )
+    #try:
+    #    task_repeat_until_date_time = datetime.strptime(
+    #        task_repeat_until, "%Y-%m-%d %H:%M:%S"
+    #    )
+    #except Exception:
+    #    task_repeat_until_date_time = datetime.strptime(
+    #        task_repeat_until, "%Y-%m-%d %H:%M"
+    #    )
+    
+    # Esto detecta automáticamente si trae segundos o no
+    task_repeat_until_date_time = parser.parse(programed_time)
     task_repeat_until_float = task_repeat_until_date_time.timestamp()
-    try:
-        programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M:%S")
-    except Exception:
-        programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M")
+    #try:
+    #    programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M:%S")
+    #except Exception:
+    #    programed_date_time = datetime.strptime(programed_time, "%Y-%m-%d %H:%M")
+    
+    # Esto detecta automáticamente si trae segundos o no
+    programed_date_time = parser.parse(programed_time)
     programed_time_float = programed_date_time.timestamp()
-    try:
-        done_date_time = datetime.strptime(done_time, "%Y-%m-%d %H:%M:%S")
-    except Exception:
-        done_date_time = datetime.strptime(done_time, "%Y-%m-%d %H:%M")
+    #try:
+    #    done_date_time = datetime.strptime(done_time, "%Y-%m-%d %H:%M:%S")
+    #except Exception:
+    #    done_date_time = datetime.strptime(done_time, "%Y-%m-%d %H:%M")
+    
+    # Esto detecta automáticamente si trae segundos o no
+    done_date_time = parser.parse(programed_time)
     done_time_float = done_date_time.timestamp()
     task_count = int((task_repeat_until_float - programed_time_float) / time_factor)
     for i in range(1, task_count + 1):
