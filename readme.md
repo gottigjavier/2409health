@@ -1,6 +1,7 @@
 # Aplicación para manejo de llamadas y tareas en sector de internación.
 
-> [!IMPORTANT]: Esta es sólo una versión de prueba. La versión actualizada el frontend consume el backend mediante api y utiliza podman. Está en un repositorio privado.
+> [!IMPORTANT]
+> Esta es sólo una versión de prueba. La versión actualizada el frontend consume el backend mediante api y utiliza podman. Está en un repositorio privado.
 
 ### Descripción General.
 
